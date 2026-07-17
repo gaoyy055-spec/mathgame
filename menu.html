@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>奇幻数学岛</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=ZCOOL+KuaiLe&display=swap');
+* { font-family: 'Nunito', 'PingFang SC', sans-serif; }
+
+@keyframes float {
+  0%,100% { transform: translateY(0px); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes spin-slow { 100% { transform: rotate(360deg); } }
+@keyframes pulse-glow {
+  0%,100% { box-shadow: 0 8px 0 #15803d, 0 0 20px rgba(34,197,94,0.4); transform: scale(1); }
+  50%      { box-shadow: 0 10px 0 #15803d, 0 0 40px rgba(34,197,94,0.7); transform: scale(1.03); }
+}
+@keyframes title-in {
+  from { transform: translateY(-24px) scale(0.9); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes slide-up {
+  from { transform: translateY(32px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes halo-pulse {
+  0%,100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.06); }
+}
+
+.anim-float      { animation: float 3s ease-in-out infinite; }
+.anim-spin       { animation: spin-slow 20s linear infinite; }
+.anim-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.anim-title      { animation: title-in 0.7s cubic-bezier(0.34,1.4,0.64,1) both; }
+.anim-slide      { animation: slide-up 0.5s ease-out both; }
+
+/* ---- TITLE ---- */
+.game-title {
+  font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: clamp(44px, 8vw, 72px);
+  color: #fff;
+  letter-spacing: 4px;
+  line-height: 1;
+  text-shadow:
+    3px  3px 0 #d97706,
+   -1px -1px 0 #d97706,
+    1px -1px 0 #d97706,
+   -1px  1px 0 #d97706,
+    0    6px 0 #92400e,
+    0   10px 18px rgba(0,0,0,0.25);
+  position: relative;
+}
+
+/* Mode toggle */
+.mode-btn { transition: all 0.2s; }
+.mode-btn.active {
+  background: linear-gradient(to bottom, #f59e0b, #ea580c);
+  color: white;
+  box-shadow: inset 0 3px 5px rgba(0,0,0,0.2), 0 4px 0 #9a3412;
+  transform: translateY(2px);
+}
+.mode-btn.inactive {
+  background: white;
+  color: #d97706;
+  box-shadow: 0 6px 0 #fcd34d;
+}
+
+/* Island cards */
+.island-card {
+  background: #7c5230;
+  border-radius: 22px;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 8px 0 #4e3220;
+  transition: all 0.28s cubic-bezier(0.34,1.4,0.64,1);
+  margin-top: 22px;
+}
+.island-card .grass {
+  border-radius: 18px 18px 8px 8px;
+  padding-bottom: 12px;
+  border-bottom: 4px solid rgba(0,0,0,0.15);
+}
+.island-card:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 14px 0 #4e3220;
+}
+/* Selected: scale up + thick gold ring + glowing halo */
+.island-card.selected {
+  transform: translateY(-10px) scale(1.1);
+  box-shadow:
+    0 14px 0 #4e3220,
+    0 0 0 4px #fde047,
+    0 0 0 8px rgba(253,224,71,0.35),
+    0 0 30px 6px rgba(253,180,0,0.55);
+  z-index: 10;
+}
+/* Animated halo ring on selected */
+.island-card.selected::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 30px;
+  border: 3px solid #fde047;
+  animation: halo-pulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+/* Non-selected dims slightly */
+.island-card:not(.selected) {
+  opacity: 0.82;
+}
+.island-card:not(.selected):hover {
+  opacity: 1;
+}
+
+/* Stars */
+.star-row { filter: grayscale(1) opacity(0.35); }
+.star-row.earned { filter: none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+</style>
+</head>
+<body class="h-screen w-screen overflow-hidden bg-sky-200">
+
+<!-- ========== MAIN MENU ========== -->
+<div id="menuScreen" class="absolute inset-0 flex flex-col items-center bg-gradient-to-b from-sky-300 via-amber-50 to-orange-100 overflow-y-auto overflow-x-hidden">
+
+  <!-- Decorative bg -->
+  <div class="fixed top-0 right-0 w-36 h-36 -mr-8 -mt-8 opacity-80 anim-spin pointer-events-none z-0">
+    <svg viewBox="0 0 100 100" class="w-full h-full fill-yellow-300"><path d="M50 0L55 35L90 40L60 60L70 95L50 75L30 95L40 60L10 40L45 35Z"/></svg>
+  </div>
+  <div class="fixed top-16 left-8 text-5xl anim-float opacity-70 pointer-events-none" style="animation-delay:0s">☁️</div>
+  <div class="fixed top-32 right-20 text-4xl anim-float opacity-50 pointer-events-none" style="animation-delay:1.5s">☁️</div>
+  <div class="fixed bottom-20 left-12 text-3xl anim-float opacity-40 pointer-events-none" style="animation-delay:0.8s">🌿</div>
+  <div class="fixed bottom-10 right-16 text-3xl anim-float opacity-40 pointer-events-none" style="animation-delay:2s">🌸</div>
+
+  <!-- Top bar -->
+  <div class="w-full max-w-4xl flex justify-between items-center px-6 pt-5 pb-1 z-10 shrink-0">
+    <div class="flex items-center gap-3 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border-4 border-orange-200 anim-slide" style="animation-delay:0.1s">
+      <div class="w-11 h-11 bg-blue-100 rounded-full border-2 border-white shadow-inner flex items-center justify-center text-2xl">👦</div>
+      <div class="font-black text-orange-800">
+        <div class="text-xs opacity-70 leading-none">见习勇士</div>
+        <div class="flex items-center gap-1 text-lg text-yellow-500 leading-tight">⭐ <span id="starCount">0</span></div>
+      </div>
+    </div>
+    <button class="w-12 h-12 bg-white/90 rounded-full shadow-lg text-2xl flex items-center justify-center border-4 border-orange-200 active:scale-95 transition-transform anim-slide" style="animation-delay:0.15s">⚙️</button>
+  </div>
+
+  <!-- Title -->
+  <div class="mt-3 mb-5 text-center z-10 shrink-0 anim-title" style="animation-delay:0.05s">
+    <div class="game-title">奇幻数学岛</div>
+    <div class="inline-block bg-orange-500 text-white px-6 py-1.5 rounded-full mt-3 border-4 border-white shadow-md -rotate-1">
+      <span class="font-black text-base tracking-widest drop-shadow">⚔️ 打败怪兽，守护和平！</span>
+    </div>
+  </div>
+
+  <!-- Mode selector -->
+  <div class="flex gap-3 bg-orange-100/90 p-2 rounded-3xl shadow-inner mb-6 z-10 border-4 border-orange-200 shrink-0 anim-slide" style="animation-delay:0.2s">
+    <button id="btnVisual" onclick="setMode('visual')"
+      class="mode-btn active px-6 py-3 rounded-2xl font-black text-base flex items-center gap-2">
+      <span class="text-2xl">👀</span> 口算模式
+    </button>
+    <button id="btnAudio" onclick="setMode('audio')"
+      class="mode-btn inactive px-6 py-3 rounded-2xl font-black text-base flex items-center gap-2">
+      <span class="text-2xl">👂</span> 听算模式
+    </button>
+  </div>
+
+  <!-- Level cards: 一行5个，撑满宽度 -->
+  <div class="w-full max-w-4xl px-5 flex gap-4 pb-2 z-10 shrink-0" id="levelGrid" style="padding-top:28px">
+
+    <!-- Lv1 -->
+    <div id="card1" class="island-card selected anim-slide flex-1 min-w-0" style="animation-delay:0.25s" onclick="selectLevel(1)">
+      <div class="grass w-full flex flex-col items-center pt-6 px-2" style="background:#84cc16;border-color:#4d7c0f">
+        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:0s">🍎</div>
+        <div class="font-black text-white text-sm drop-shadow tracking-wide">乘法入门</div>
+        <div class="text-xs text-green-100 font-bold mb-1">1~6 乘法</div>
+      </div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm star-row earned" id="stars1">⭐⭐⭐</div>
+    </div>
+
+    <!-- Lv2 -->
+    <div id="card2" class="island-card anim-slide flex-1 min-w-0" style="animation-delay:0.3s" onclick="selectLevel(2)">
+      <div class="grass w-full flex flex-col items-center pt-6 px-2" style="background:#eab308;border-color:#ca8a04">
+        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:0.5s">🍉</div>
+        <div class="font-black text-white text-sm drop-shadow tracking-wide">除法入门</div>
+        <div class="text-xs text-yellow-100 font-bold mb-1">1~6 除法</div>
+      </div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars2">⭐⭐⭐</div>
+    </div>
+
+    <!-- Lv3 -->
+    <div id="card3" class="island-card anim-slide flex-1 min-w-0" style="animation-delay:0.35s" onclick="selectLevel(3)">
+      <div class="grass w-full flex flex-col items-center pt-6 px-2" style="background:#3b82f6;border-color:#2563eb">
+        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:1s">🚀</div>
+        <div class="font-black text-white text-sm drop-shadow tracking-wide">乘法进阶</div>
+        <div class="text-xs text-blue-100 font-bold mb-1">7~9 乘法</div>
+      </div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars3">⭐⭐⭐</div>
+    </div>
+
+    <!-- Lv4 -->
+    <div id="card4" class="island-card anim-slide flex-1 min-w-0" style="animation-delay:0.4s" onclick="selectLevel(4)">
+      <div class="grass w-full flex flex-col items-center pt-6 px-2" style="background:#a855f7;border-color:#9333ea">
+        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:1.5s">🛸</div>
+        <div class="font-black text-white text-sm drop-shadow tracking-wide">除法进阶</div>
+        <div class="text-xs text-purple-100 font-bold mb-1">7~9 除法</div>
+      </div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars4">⭐⭐⭐</div>
+    </div>
+
+    <!-- Lv5 -->
+    <div id="card5" class="island-card anim-slide flex-1 min-w-0" style="animation-delay:0.45s" onclick="selectLevel(5)">
+      <div class="grass w-full flex flex-col items-center pt-6 px-2" style="background:#ef4444;border-color:#b91c1c">
+        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:2s">👑</div>
+        <div class="font-black text-white text-sm drop-shadow tracking-wide">巅峰对决</div>
+        <div class="text-xs text-red-100 font-bold mb-1">综合复习</div>
+      </div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars5">⭐⭐⭐</div>
+    </div>
+
+  </div>
+
+  <!-- Start button -->
+  <button onclick="startGame()"
+    class="anim-pulse-glow mt-8 mb-8 z-10 bg-gradient-to-b from-green-400 to-green-600 text-white font-black text-3xl py-4 px-24 rounded-full border-4 border-white active:scale-95 transition-transform flex items-center gap-3 shadow-xl shrink-0 anim-slide"
+    style="animation-delay:0.5s">
+    <span>▶</span> 出发！
+  </button>
+
+</div>
+
+<script>
+let selectedLevel = 1;
+let selectedMode = 'visual';
+
+function setMode(m) {
+  selectedMode = m;
+  document.getElementById('btnVisual').className =
+    'mode-btn ' + (m === 'visual' ? 'active' : 'inactive') + ' px-5 py-2.5 rounded-2xl font-black text-base flex items-center gap-2';
+  document.getElementById('btnAudio').className =
+    'mode-btn ' + (m === 'audio' ? 'active' : 'inactive') + ' px-5 py-2.5 rounded-2xl font-black text-base flex items-center gap-2';
+}
+
+function selectLevel(n) {
+  selectedLevel = n;
+  for (let i = 1; i <= 5; i++) {
+    const c = document.getElementById('card' + i);
+    c.classList.toggle('selected', i === n);
+  }
+}
+
+function startGame() {
+  // Pass params via sessionStorage
+  sessionStorage.setItem('gameLevel', selectedLevel);
+  sessionStorage.setItem('gameMode', selectedMode);
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

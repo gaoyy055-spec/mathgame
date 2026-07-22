@@ -114,10 +114,104 @@
 .island-card:not(.selected):hover {
   opacity: 1;
 }
+.island-card.locked {
+  cursor: not-allowed;
+  filter: grayscale(0.75);
+  opacity: 0.45;
+}
+.island-card.locked:hover {
+  transform: none;
+  box-shadow: 0 8px 0 #4e3220;
+  opacity: 0.55;
+}
+.island-card.locked::before {
+  content: '未解锁';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(68, 64, 60, 0.9);
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.locked-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.locked-modal.show { display: flex; }
+.locked-modal-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(60, 35, 18, 0.45);
+  backdrop-filter: blur(6px);
+}
+.locked-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(340px, 100%);
+  padding: 32px 28px 28px;
+  border: 4px solid #fbbf24;
+  border-radius: 32px;
+  background: linear-gradient(160deg, #fffbeb 0%, #fff7ed 100%);
+  box-shadow: 0 10px 0 #d97706, 0 20px 50px rgba(124, 45, 18, 0.3);
+  text-align: center;
+}
+.locked-modal-emoji {
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 10px;
+  display: block;
+  animation: emoji-bounce 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes emoji-bounce {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.locked-modal-title {
+  color: #92400e;
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.locked-modal-msg {
+  color: #78350f;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.7;
+  margin-bottom: 24px;
+  background: rgba(251,191,36,0.18);
+  border-radius: 16px;
+  padding: 10px 14px;
+}
+.locked-modal-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  color: #7c2d12;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+  padding: 13px 0;
+  box-shadow: 0 6px 0 #b45309;
+  letter-spacing: 0.05em;
+  transition: transform 0.1s;
+}
+.locked-modal-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #b45309; }
 
 /* Stars */
-.star-row { filter: grayscale(1) opacity(0.35); }
-.star-row.earned { filter: none; }
+.star { font-size: 1em; filter: grayscale(1) opacity(0.35); }
+.star.on { filter: none; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
@@ -177,11 +271,45 @@
     <!-- Lv1 -->
     <div id="card1" class="island-card selected anim-slide flex-1 min-w-0" style="animation-delay:0.25s" onclick="selectLevel(1)">
       <div class="grass w-full flex flex-col items-center pt-6 px-2" style="background:#84cc16;border-color:#4d7c0f">
-        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:0s">🍎</div>
+        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:0s;line-height:1">
+          <svg viewBox="0 0 52 52" width="44" height="44">
+            <!-- horns -->
+            <path d="M14 6L11 16L17 10L14 6Z" fill="#8A30C0"/>
+            <path d="M26 2L24 12L29 4L26 2Z" fill="#8A30C0"/>
+            <path d="M38 6L41 16L35 10L38 6Z" fill="#8A30C0"/>
+            <!-- head -->
+            <circle cx="26" cy="28" r="18" fill="#9040C8"/>
+            <circle cx="26" cy="26" r="15" fill="#A050D8" opacity="0.35"/>
+            <!-- eyebrows -->
+            <path d="M15 18C18 16.5 21 16.5 24 18" stroke="#5A0080" stroke-width="2" stroke-linecap="round"/>
+            <path d="M28 18C31 16.5 34 16.5 37 18" stroke="#5A0080" stroke-width="2" stroke-linecap="round"/>
+            <!-- eyes outer -->
+            <circle cx="20" cy="23" r="5" fill="#FF4400"/>
+            <circle cx="32" cy="23" r="5" fill="#FF4400"/>
+            <!-- eyes mid -->
+            <circle cx="20" cy="23" r="3.5" fill="#FF8800"/>
+            <circle cx="32" cy="23" r="3.5" fill="#FF8800"/>
+            <!-- pupils -->
+            <circle cx="20" cy="23" r="2" fill="#1A0030"/>
+            <circle cx="32" cy="23" r="2" fill="#1A0030"/>
+            <!-- glints -->
+            <circle cx="20.8" cy="22.2" r="0.8" fill="white"/>
+            <circle cx="32.8" cy="22.2" r="0.8" fill="white"/>
+            <!-- mouth -->
+            <path d="M17 32C21 38 31 38 35 32H17Z" fill="#5A0080"/>
+            <path d="M17 32C21 37 31 37 35 32H17Z" fill="#7A1090"/>
+            <!-- teeth -->
+            <path d="M21 33H23L22 37L21 33Z" fill="white"/>
+            <path d="M25.5 34H27.5L26.5 38L25.5 34Z" fill="white"/>
+            <path d="M30 33H32L31 37L30 33Z" fill="white"/>
+            <!-- tongue -->
+            <path d="M24 36C25 39 27 39 28 36H24Z" fill="#FF4070"/>
+          </svg>
+        </div>
         <div class="font-black text-white text-sm drop-shadow tracking-wide">乘法入门</div>
         <div class="text-xs text-green-100 font-bold mb-1">1~6 乘法</div>
       </div>
-      <div class="py-1.5 flex justify-center gap-0 text-sm star-row earned" id="stars1">⭐⭐⭐</div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm" id="stars1"><span class="star on">⭐</span><span class="star">⭐</span><span class="star">⭐</span></div>
     </div>
 
     <!-- Lv2 -->
@@ -191,7 +319,7 @@
         <div class="font-black text-white text-sm drop-shadow tracking-wide">除法入门</div>
         <div class="text-xs text-yellow-100 font-bold mb-1">1~6 除法</div>
       </div>
-      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars2">⭐⭐⭐</div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm" id="stars2"><span class="star on">⭐</span><span class="star">⭐</span><span class="star">⭐</span></div>
     </div>
 
     <!-- Lv3 -->
@@ -201,7 +329,7 @@
         <div class="font-black text-white text-sm drop-shadow tracking-wide">乘法进阶</div>
         <div class="text-xs text-blue-100 font-bold mb-1">7~9 乘法</div>
       </div>
-      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars3">⭐⭐⭐</div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm" id="stars3"><span class="star on">⭐</span><span class="star on">⭐</span><span class="star">⭐</span></div>
     </div>
 
     <!-- Lv4 -->
@@ -211,7 +339,7 @@
         <div class="font-black text-white text-sm drop-shadow tracking-wide">除法进阶</div>
         <div class="text-xs text-purple-100 font-bold mb-1">7~9 除法</div>
       </div>
-      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars4">⭐⭐⭐</div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm" id="stars4"><span class="star on">⭐</span><span class="star on">⭐</span><span class="star">⭐</span></div>
     </div>
 
     <!-- Lv5 -->
@@ -221,7 +349,7 @@
         <div class="font-black text-white text-sm drop-shadow tracking-wide">巅峰对决</div>
         <div class="text-xs text-red-100 font-bold mb-1">综合复习</div>
       </div>
-      <div class="py-1.5 flex justify-center gap-0 text-sm star-row" id="stars5">⭐⭐⭐</div>
+      <div class="py-1.5 flex justify-center gap-0 text-sm" id="stars5"><span class="star on">⭐</span><span class="star on">⭐</span><span class="star on">⭐</span></div>
     </div>
 
   </div>
@@ -235,9 +363,22 @@
 
 </div>
 
+<div id="lockedModal" class="locked-modal" aria-hidden="true">
+  <div class="locked-modal-bg" onclick="hideLockedModal()"></div>
+  <div class="locked-modal-card" role="dialog" aria-modal="true" aria-labelledby="lockedModalTitle">
+    <span class="locked-modal-emoji">🔒</span>
+    <div id="lockedModalTitle" class="locked-modal-title">关卡还没解锁哦～</div>
+    <div id="lockedModalMsg" class="locked-modal-msg">请先完成前面的关卡，再来挑战这一关吧！</div>
+    <button type="button" class="locked-modal-btn" onclick="hideLockedModal()">好的，我知道了！</button>
+  </div>
+</div>
+
 <script>
 let selectedLevel = 1;
 let selectedMode = 'visual';
+let unlockedLevel = 1;
+const TOTAL_LEVELS = 5;
+const LEVEL_NAMES = ['', '乘法入门', '除法入门', '乘法进阶', '除法进阶', '巅峰对决'];
 
 function setMode(m) {
   selectedMode = m;
@@ -247,20 +388,77 @@ function setMode(m) {
     'mode-btn ' + (m === 'audio' ? 'active' : 'inactive') + ' px-5 py-2.5 rounded-2xl font-black text-base flex items-center gap-2';
 }
 
-function selectLevel(n) {
-  selectedLevel = n;
-  for (let i = 1; i <= 5; i++) {
-    const c = document.getElementById('card' + i);
-    c.classList.toggle('selected', i === n);
+function getUnlockedLevel() {
+  const completedLevel = parseInt(localStorage.getItem('mathgameMaxCompletedLevel') || '0', 10);
+  const safeCompletedLevel = Number.isFinite(completedLevel) ? completedLevel : 0;
+  return Math.min(TOTAL_LEVELS, Math.max(1, safeCompletedLevel + 1));
+}
+
+function isLevelUnlocked(n) {
+  return n <= unlockedLevel;
+}
+
+function showLockedModal(n) {
+  const requiredLevel = Math.max(1, n - 1);
+  const message = `请先完成前面的关卡，再来挑战这一关吧！`;
+  const msg = document.getElementById('lockedModalMsg');
+  const modal = document.getElementById('lockedModal');
+
+  if (!msg || !modal) {
+    alert(message);
+    return;
+  }
+
+  msg.textContent = message;
+  modal.classList.add('show');
+  modal.style.display = 'flex';
+  modal.style.zIndex = '1000';
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function hideLockedModal() {
+  const modal = document.getElementById('lockedModal');
+  if (!modal) return;
+
+  modal.classList.remove('show');
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function refreshLevelCards() {
+  unlockedLevel = getUnlockedLevel();
+  if (!isLevelUnlocked(selectedLevel)) selectedLevel = unlockedLevel;
+
+  for (let i = 1; i <= TOTAL_LEVELS; i++) {
+    const card = document.getElementById('card' + i);
+    card.classList.toggle('locked', !isLevelUnlocked(i));
+    card.classList.toggle('selected', i === selectedLevel);
   }
 }
 
+function selectLevel(n) {
+  if (!isLevelUnlocked(n)) {
+    showLockedModal(n);
+    return;
+  }
+
+  selectedLevel = n;
+  refreshLevelCards();
+}
+
 function startGame() {
+  if (!isLevelUnlocked(selectedLevel)) {
+    showLockedModal(selectedLevel);
+    return;
+  }
+
   // Pass params via sessionStorage
   sessionStorage.setItem('gameLevel', selectedLevel);
   sessionStorage.setItem('gameMode', selectedMode);
   window.location.href = 'index.html';
 }
+
+window.addEventListener('load', refreshLevelCards);
 </script>
 </body>
 </html>

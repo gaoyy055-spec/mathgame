@@ -936,6 +936,7 @@ body {
 <div id="readygo-overlay" style="
   position:fixed; inset:0; z-index:600;
   display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.45);
   backdrop-filter:blur(10px);
   pointer-events:none;
   flex-direction:column; gap:0;
@@ -953,25 +954,18 @@ body {
     <span class="rg-star" style="left:75%;top:88%;font-size:1.6rem;animation-delay:0.2s">⭐</span>
   </div>
   <div id="readygo-card" style="
-    background:rgba(255,255,255,0.18);
-    border:4px solid rgba(255,255,255,0.55);
-    border-radius:36px;
-    padding:48px 80px;
-    box-shadow:0 12px 60px rgba(0,0,0,0.25), 0 0 80px rgba(255,220,0,0.25);
-    backdrop-filter:blur(6px);
+    background:white;
+    border-radius:40px;
+    padding:52px 96px;
+    box-shadow:0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(255,255,255,0.6);
     display:flex; align-items:center; justify-content:center;
     animation:readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
   ">
     <div id="readygo-text" style="
       font-size:clamp(120px,28vw,280px); font-weight:900;
-      color:white; letter-spacing:8px;
+      letter-spacing:8px;
       font-family:'Nunito',system-ui,sans-serif;
-      text-shadow:
-        0 8px 0 rgba(0,0,0,0.2),
-        0 0 80px rgba(255,220,0,0.8),
-        0 0 160px rgba(255,150,0,0.4);
       line-height:1;
-      -webkit-text-stroke: 4px rgba(0,0,0,0.1);
     "></div>
   </div>
 </div>
@@ -1402,23 +1396,41 @@ function showReadyGo(text, color, bgStyle) {
   const el = document.getElementById('readygo-text');
   const card = document.getElementById('readygo-card');
   if (bgStyle) {
-    overlay.style.background = bgStyle;
+    overlay.style.background = 'rgba(0,0,0,0.45)';
   }
+  // Reset styles
   el.style.fontSize = '';
   el.style.fontFamily = '';
   el.style.fontWeight = '';
   el.style.letterSpacing = '';
   el.style.textShadow = '';
-  el.style.color = color;
+  el.style.color = '';
+  el.style.background = '';
+  el.style.webkitBackgroundClip = '';
+  el.style.webkitTextFillColor = '';
+
   el.textContent = text;
+
+  // Colorful gradient per word
+  if (text === 'READY') {
+    el.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FFD93D 40%, #6BCB77 70%, #4D96FF 100%)';
+    el.style.webkitBackgroundClip = 'text';
+    el.style.webkitTextFillColor = 'transparent';
+    el.style.backgroundClip = 'text';
+    card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(255,107,107,0.3)';
+  } else {
+    el.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+    el.style.webkitBackgroundClip = 'text';
+    el.style.webkitTextFillColor = 'transparent';
+    el.style.backgroundClip = 'text';
+    card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(34,197,94,0.35)';
+  }
+
   overlay.style.display = 'flex';
 
   return new Promise(resolve => {
     const doShow = () => {
       if (card) { card.style.animation = 'none'; void card.offsetWidth; card.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)'; }
-      el.style.animation = 'none';
-      void el.offsetWidth;
-      el.style.animation = '';
       setTimeout(resolve, 800);
     };
 
@@ -1967,28 +1979,9 @@ window.addEventListener('load', async () => {
   // In audio mode, VoiceGame handles everything — no OCR needed; start pinging in visual mode only
   const recognizer = mode === 'audio' ? { ready: true, waitReady: () => Promise.resolve() } : new DigitRecognizer();
 
-  // In visual mode, only show loading screen if OCR not yet ready
+  // In visual mode, wait silently for OCR to be ready (no loading overlay)
   if (mode !== 'audio' && !recognizer.ready) {
-    const overlay = document.getElementById('readygo-overlay');
-    const textEl  = document.getElementById('readygo-text');
-    overlay.style.display = 'flex';
-    textEl.style.color = '#1a1a2e';
-    textEl.style.fontSize = 'clamp(22px,5vw,38px)';
-    textEl.style.fontFamily = "'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif";
-    textEl.style.fontWeight = '900';
-    textEl.style.letterSpacing = '4px';
-    textEl.style.textShadow = '0 2px 8px rgba(0,0,0,0.12)';
-    let dots = 0;
-    const dotTimer = setInterval(() => {
-      dots = (dots + 1) % 4;
-      textEl.textContent = '识别引擎加载中' + '．'.repeat(dots);
-    }, 600);
-    textEl.textContent = '识别引擎加载中';
     await recognizer.waitReady();
-    clearInterval(dotTimer);
-    textEl.textContent = '';
-    overlay.style.display = 'none';
-    textEl.style.fontSize = '';
   }
 
   runIntroSequence(level, mode).then(async () => {

@@ -1458,24 +1458,14 @@ function showReadyGo(text, color, bgStyle) {
   el.style.lineHeight = '1';
   el.style.color = text === 'READY' ? '#FFD700' : '#7CFC00';
   el.style.textShadow = '0 4px 24px rgba(0,0,0,0.35), 0 2px 0 rgba(0,0,0,0.2)';
-  el.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
 
   overlay.style.display = 'flex';
 
   return new Promise(resolve => {
-    const doShow = () => {
-      el.style.animation = 'none';
-      void el.offsetWidth;
-      el.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
-      setTimeout(resolve, 800);
-    };
-
-    if (el.textContent && el.style.opacity !== '0') {
-      el.style.animation = 'readygo-fade-out 0.18s ease-in forwards';
-      setTimeout(doShow, 180);
-    } else {
-      doShow();
-    }
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+    setTimeout(resolve, 800);
   });
 }
 

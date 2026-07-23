@@ -27,26 +27,63 @@ body {
   100% { transform: translateY(-100vh) rotate(360deg); }
 }
 
-/* ===== SECTION 1: RACE (LEVEL 3) ===== */
+/* ===== SECTION 1: RACE (LEVEL 3) — 3-column layout ===== */
 #race-section {
   display: none;
-  flex: 0 0 48%;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2px 0 0;
-  background: #87CEEB;
-  border-bottom: 4px solid #5a3e1b;
+  flex: 1;
+  flex-direction: row;
+  align-items: stretch;
+  background: #FFF3E0;
   position: relative; z-index: 1;
-  box-shadow: 0 4px 15px rgba(0,100,0,0.18);
-  gap: 0;
   overflow: hidden;
 }
 #race-section.active { display: flex; }
 
+/* Side strips */
+#warrior-strip, #monster-strip {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  gap: 3px;
+  overflow: hidden;
+}
+#warrior-strip {
+  background: linear-gradient(180deg, #87CEEB 0%, #c8eaf8 40%, #6abf6a 100%);
+  border-right: 3px solid #5a9e3a;
+}
+#monster-strip {
+  background: linear-gradient(180deg, #2a1a0e 0%, #7a4a2a 40%, #3d2b1f 100%);
+  border-left: 3px solid #5a3e1b;
+}
+.strip-label { font-size: 18px; flex-shrink: 0; }
+.strip-step {
+  font-size: 12px; font-weight: 900;
+  border-radius: 8px; padding: 1px 5px; flex-shrink: 0; text-align: center;
+}
+#warrior-step-badge { color: #1B5E20; background: rgba(255,255,255,0.75); }
+#monster-step-badge  { color: #ffe082; background: rgba(0,0,0,0.35); }
+
+#warrior-canvas-wrap, #monster-canvas-wrap {
+  flex: 1; width: 100%;
+  position: relative; min-height: 0;
+}
+#warrior-canvas, #monster-canvas {
+  width: 100%; height: 100%; display: block;
+}
+
+/* Center column */
+#race-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: stretch; min-width: 0; overflow: hidden;
+}
 #race-header {
-  display: flex; justify-content: space-between; align-items: center;
-  width: 100%; flex-shrink: 0; padding: 0 2px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; padding: 3px 8px; flex-wrap: wrap; gap: 6px;
+  background: rgba(255,255,255,0.6);
+  border-bottom: 2px solid #FFB74D;
   position: relative; z-index: 2;
 }
 #race-header-label {
@@ -55,20 +92,19 @@ body {
   padding: 1px 8px; border-radius: 10px;
   text-shadow: none;
 }
-#race-step-info {
-  font-size: 12px; font-weight: 800; color: #1B5E20;
-  background: rgba(255,255,255,0.75);
-  padding: 1px 10px; border-radius: 10px;
+#monster-full-banner {
+  display: none;
+  background: #E040FB; color: white;
+  font-size: 11px; font-weight: 900; padding: 2px 8px;
+  border-radius: 10px;
+  animation: blink-banner 0.8s ease-in-out infinite alternate;
+  pointer-events: none;
 }
+#race-center #question-section { flex: 0 0 auto; }
+#race-center #answer-section { flex: 1; min-height: 0; }
 
-/* Race canvas takes remaining height */
-#race-canvas-wrap {
-  width: 100%; flex: 1;
-  position: relative; z-index: 1;
-  min-height: 0;
-}
-#race-canvas {
-  width: 100%; height: 100%; display: block;
+@media (max-width: 380px) {
+  #warrior-strip, #monster-strip { width: 64px; }
 }
 
 /* ===== SECTION 1: PK ===== */
@@ -181,7 +217,6 @@ body {
 }
 #monster-full-banner {
   display: none;
-  position: absolute; top: 2px; right: 14px;
   background: #E040FB; color: white;
   font-size: 11px; font-weight: 900; padding: 2px 8px;
   border-radius: 10px; animation: blink-banner 0.8s ease-in-out infinite alternate;
@@ -741,12 +776,24 @@ body {
 
 <!-- ===== SECTION 1: RACE (LEVEL 3) ===== -->
 <div id="race-section">
-  <div id="race-header">
-    <div id="race-header-label">🏃 赛跑模式</div>
-    <div id="race-step-info">勇士 <span id="race-player-step">0</span>/10 &nbsp;|&nbsp; 怪兽 <span id="race-monster-step">0</span>/10</div>
+  <!-- Left strip: warrior track -->
+  <div id="warrior-strip">
+    <div class="strip-label" id="warrior-strip-label">🛡️</div>
+    <div id="warrior-canvas-wrap"><canvas id="warrior-canvas"></canvas></div>
+    <div class="strip-step" id="warrior-step-badge"><span id="race-player-step">0</span>/10</div>
   </div>
-  <div id="race-canvas-wrap">
-    <canvas id="race-canvas"></canvas>
+  <!-- Center: race header + question/answer injected by JS -->
+  <div id="race-center">
+    <div id="race-header">
+      <div id="race-header-label">🏃 赛跑模式</div>
+      <div id="monster-full-banner">怪兽答完啦！快追上它！💪</div>
+    </div>
+  </div>
+  <!-- Right strip: monster track -->
+  <div id="monster-strip">
+    <div class="strip-label" id="monster-strip-label">👾</div>
+    <div id="monster-canvas-wrap"><canvas id="monster-canvas"></canvas></div>
+    <div class="strip-step" id="monster-step-badge"><span id="race-monster-step">0</span>/10</div>
   </div>
 </div>
 
@@ -932,7 +979,6 @@ body {
     </div>
   </div>
   <div id="race-label">⚡ 比谁快 ⚡</div>
-  <div id="monster-full-banner">怪兽答完啦！快追上它！💪</div>
 </div>
 
 <!-- ===== SECTION 2: QUESTION ===== -->
@@ -2713,36 +2759,55 @@ class RaceGame {
   }
 
   _initUI() {
-    // Hide pk-section, show race-section
     document.getElementById('pk-section').style.display = 'none';
     document.getElementById('race-section').classList.add('active');
-    // Size race canvas after layout
-    const wrap = document.getElementById('race-canvas-wrap');
-    const rc = document.getElementById('race-canvas');
-    const sizeAndDraw = () => {
-      const w = wrap.clientWidth || wrap.offsetWidth;
-      const h = wrap.clientHeight || wrap.offsetHeight;
-      if (w > 0 && h > 0) {
-        rc.width = w; rc.height = h;
-        this._drawRaceScene();
-      } else {
-        requestAnimationFrame(sizeAndDraw);
-      }
+
+    // Move question + answer sections into race-center
+    const center = document.getElementById('race-center');
+    const qSec = document.getElementById('question-section');
+    const aSec = document.getElementById('answer-section');
+    center.appendChild(qSec);
+    center.appendChild(aSec);
+    qSec.style.display = 'flex';
+    aSec.style.display = 'flex';
+
+    // Size both strip canvases
+    const sizeCanvas = (wrapId, cvId) => {
+      const wrap = document.getElementById(wrapId);
+      const cv = document.getElementById(cvId);
+      const trySize = () => {
+        const w = wrap.clientWidth || wrap.offsetWidth;
+        const h = wrap.clientHeight || wrap.offsetHeight;
+        if (w > 0 && h > 0) { cv.width = w; cv.height = h; this._drawRaceScene(); }
+        else requestAnimationFrame(trySize);
+      };
+      requestAnimationFrame(trySize);
     };
-    requestAnimationFrame(sizeAndDraw);
-    // Also size answer canvas after layout
+    sizeCanvas('warrior-canvas-wrap', 'warrior-canvas');
+    sizeCanvas('monster-canvas-wrap', 'monster-canvas');
+
+    // Size answer canvas
     const ansWrap = document.getElementById('canvas-wrapper');
     const ansCanvas = this.canvas;
-    const sizeAnswerCanvas = () => {
-      const w2 = ansWrap.clientWidth || ansWrap.offsetWidth;
-      const h2 = ansWrap.clientHeight || ansWrap.offsetHeight;
-      if (w2 > 0 && h2 > 0) {
-        ansCanvas.width = w2; ansCanvas.height = h2;
-      } else {
-        requestAnimationFrame(sizeAnswerCanvas);
-      }
+    const sizeAns = () => {
+      const w = ansWrap.clientWidth || ansWrap.offsetWidth;
+      const h = ansWrap.clientHeight || ansWrap.offsetHeight;
+      if (w > 0 && h > 0) { ansCanvas.width = w; ansCanvas.height = h; }
+      else requestAnimationFrame(sizeAns);
     };
-    requestAnimationFrame(sizeAnswerCanvas);
+    requestAnimationFrame(sizeAns);
+  }
+
+  _teardownUI() {
+    // Return question/answer sections to body so other game modes work
+    const qSec = document.getElementById('question-section');
+    const aSec = document.getElementById('answer-section');
+    if (qSec && qSec.parentElement && qSec.parentElement.id === 'race-center') {
+      document.body.appendChild(qSec);
+    }
+    if (aSec && aSec.parentElement && aSec.parentElement.id === 'race-center') {
+      document.body.appendChild(aSec);
+    }
   }
 
   _updateRaceTrack() {
@@ -2752,295 +2817,131 @@ class RaceGame {
   }
 
   _drawRaceScene() {
-    const rc = document.getElementById('race-canvas');
-    if (!rc) return;
-    const ctx = rc.getContext('2d');
-    const W = rc.width, H = rc.height;
+    this._drawVerticalStrip('warrior-canvas', this.playerStep, true);
+    this._drawVerticalStrip('monster-canvas', this.monsterStep, false);
+  }
+
+  _drawVerticalStrip(canvasId, step, isWarrior) {
+    const cv = document.getElementById(canvasId);
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
     if (W === 0 || H === 0) return;
-    const lerp = (a, b, t) => a + (b - a) * t;
 
-    // === SKY ===
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.52);
-    skyGrad.addColorStop(0, '#4a90d9');
-    skyGrad.addColorStop(0.55, '#87CEEB');
-    skyGrad.addColorStop(1, '#c8eaf8');
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, W, H * 0.52);
-
-    // === CLOUDS ===
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    [[0.15,0.08,W*0.09,H*0.045],[0.45,0.05,W*0.10,H*0.04],[0.75,0.09,W*0.08,H*0.038]].forEach(([fcx,fcy,rw,rh]) => {
-      const cx2 = W*fcx, cy2 = H*fcy;
-      ctx.beginPath(); ctx.ellipse(cx2, cy2, rw, rh, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(cx2-rw*0.45, cy2+rh*0.2, rw*0.62, rh*0.78, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(cx2+rw*0.45, cy2+rh*0.15, rw*0.58, rh*0.72, 0, 0, Math.PI*2); ctx.fill();
-    });
-
-    // === GROUND ===
-    const grassGrad = ctx.createLinearGradient(0, H*0.50, 0, H);
-    grassGrad.addColorStop(0, '#6abf6a');
-    grassGrad.addColorStop(1, '#2e7d32');
-    ctx.fillStyle = grassGrad;
-    ctx.fillRect(0, H*0.50, W, H*0.50);
-
-    // === LEFT CASTLE ===
-    const cxBase = W*0.01;
-    // Wall
-    ctx.fillStyle = '#f4a0b0';
-    ctx.fillRect(cxBase + W*0.01, H*0.25, W*0.15, H*0.27);
-    // Left tower
-    ctx.fillStyle = '#e8909f';
-    ctx.fillRect(cxBase, H*0.18, W*0.055, H*0.34);
-    // Right tower
-    ctx.fillRect(cxBase + W*0.105, H*0.20, W*0.055, H*0.32);
-    // Battlements on wall top (4 merlons)
-    ctx.fillStyle = '#e8909f';
-    for (let m = 0; m < 4; m++) {
-      ctx.fillRect(cxBase + W*0.02 + m * W*0.033, H*0.21, W*0.020, H*0.04);
+    // Background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    if (isWarrior) {
+      bgGrad.addColorStop(0, '#4a90d9'); bgGrad.addColorStop(0.45, '#87CEEB');
+      bgGrad.addColorStop(0.7, '#6abf6a'); bgGrad.addColorStop(1, '#2e7d32');
+    } else {
+      bgGrad.addColorStop(0, '#1a0f0a'); bgGrad.addColorStop(0.5, '#3d2b1f');
+      bgGrad.addColorStop(1, '#2a1a0e');
     }
-    // Blue cone roofs
-    ctx.fillStyle = '#3a6fd8';
-    // Left tower cone
-    ctx.beginPath();
-    ctx.moveTo(cxBase, H*0.18); ctx.lineTo(cxBase + W*0.055, H*0.18);
-    ctx.lineTo(cxBase + W*0.027, H*0.07); ctx.closePath(); ctx.fill();
-    // Right tower cone
-    ctx.beginPath();
-    ctx.moveTo(cxBase + W*0.105, H*0.20);
-    ctx.lineTo(cxBase + W*0.160, H*0.20);
-    ctx.lineTo(cxBase + W*0.132, H*0.09); ctx.closePath(); ctx.fill();
-    // Arrow-slit windows
-    ctx.fillStyle = '#2c1810';
-    [[cxBase+W*0.015,H*0.22],[cxBase+W*0.120,H*0.24]].forEach(([wx,wy]) => {
-      ctx.fillRect(wx, wy, W*0.012, H*0.055);
-    });
-    // Gate arch
-    ctx.fillStyle = '#2c1810';
-    ctx.beginPath();
-    ctx.arc(cxBase + W*0.082, H*0.46, W*0.022, Math.PI, 0); ctx.fill();
-    ctx.fillRect(cxBase + W*0.060, H*0.46, W*0.044, H*0.06);
-    // Castle outline
-    ctx.strokeStyle = '#8a5050'; ctx.lineWidth = 1.5;
-    ctx.strokeRect(cxBase + W*0.01, H*0.25, W*0.15, H*0.27);
-    ctx.strokeRect(cxBase, H*0.18, W*0.055, H*0.34);
-    ctx.strokeRect(cxBase + W*0.105, H*0.20, W*0.055, H*0.32);
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
 
-    // === RIGHT CAVE / MONSTER FACE ===
-    const caX = W * 0.82;
-    // Rocky hill
-    ctx.fillStyle = '#3d2b1f';
-    ctx.beginPath();
-    ctx.moveTo(W*0.80, H*0.55);
-    ctx.quadraticCurveTo(W*0.82, H*0.08, W*0.91, H*0.06);
-    ctx.quadraticCurveTo(W*1.00, H*0.08, W*1.00, H*0.55);
-    ctx.closePath(); ctx.fill();
-    // Hill highlight
-    ctx.fillStyle = '#5a3e2a';
-    ctx.beginPath();
-    ctx.quadraticCurveTo(W*0.88, H*0.06, W*0.91, H*0.06);
-    ctx.quadraticCurveTo(W*0.97, H*0.10, W*0.97, H*0.22);
-    ctx.quadraticCurveTo(W*0.93, H*0.12, W*0.89, H*0.10);
-    ctx.closePath(); ctx.fill();
-    // Cave mouth (bottom-half ellipse)
-    ctx.fillStyle = '#1a0f0a';
-    ctx.beginPath();
-    ctx.ellipse(W*0.91, H*0.43, W*0.07, H*0.11, 0, Math.PI, 0); ctx.fill();
-    // Monster brows above cave
-    ctx.strokeStyle = '#8b5a2a'; ctx.lineWidth = Math.max(2, W*0.008); ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(W*0.845, H*0.25); ctx.quadraticCurveTo(W*0.862, H*0.21, W*0.882, H*0.25); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(W*0.938, H*0.25); ctx.quadraticCurveTo(W*0.958, H*0.21, W*0.975, H*0.25); ctx.stroke();
-    // Cave eyes (glowing yellow)
-    ctx.fillStyle = '#f0c030';
-    ctx.beginPath(); ctx.arc(W*0.869, H*0.29, W*0.018, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(W*0.951, H*0.29, W*0.018, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#1a0f0a';
-    ctx.beginPath(); ctx.arc(W*0.869, H*0.29, W*0.009, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(W*0.951, H*0.29, W*0.009, 0, Math.PI*2); ctx.fill();
-    // Jagged teeth
-    ctx.fillStyle = '#ddd';
-    for (let t2 = 0; t2 < 5; t2++) {
-      const tx = W*0.868 + t2 * W*0.013 - W*0.026;
-      ctx.beginPath();
-      ctx.moveTo(tx, H*0.435); ctx.lineTo(tx + W*0.006, H*0.43); ctx.lineTo(tx + W*0.013, H*0.435);
-      ctx.closePath(); ctx.fill();
+    // Small clouds (warrior only)
+    if (isWarrior) {
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      [[0.5, 0.06, W*0.35, H*0.022], [0.5, 0.13, W*0.28, H*0.018]].forEach(([fcx, fcy, rw, rh]) => {
+        ctx.beginPath(); ctx.ellipse(W*fcx, H*fcy, rw, rh, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(W*fcx-rw*0.4, H*fcy+rh*0.2, rw*0.55, rh*0.75, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(W*fcx+rw*0.4, H*fcy+rh*0.15, rw*0.5, rh*0.7, 0, 0, Math.PI*2); ctx.fill();
+      });
+    } else {
+      // Monster strip: glowing eyes
+      ctx.fillStyle = '#f0c030';
+      ctx.beginPath(); ctx.arc(W*0.33, H*0.1, W*0.09, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W*0.67, H*0.1, W*0.09, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1a0f0a';
+      ctx.beginPath(); ctx.arc(W*0.33, H*0.1, W*0.045, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W*0.67, H*0.1, W*0.045, 0, Math.PI*2); ctx.fill();
     }
 
-    // === PERSPECTIVE TRACK ===
-    const VP = { x: W * 0.50, y: H * 0.30 };
-    const trackBaseY = H * 0.97;
-    // Warrior lane (left side)
-    const wNL = VP.x - W*0.10; // near left
-    const wNR = VP.x - W*0.01; // near right
-    const wBL = W * 0.04;       // base left
-    const wBR = W * 0.46;       // base right
-    // Monster lane (right side)
-    const mNL = VP.x + W*0.01;
-    const mNR = VP.x + W*0.10;
-    const mBL = W * 0.54;
-    const mBR = W * 0.96;
+    // Track
+    const trackX = W * 0.18;
+    const trackW = W * 0.64;
+    const trackTop = H * 0.18;
+    const trackBot = H * 0.90;
+    const trackH = trackBot - trackTop;
 
-    // Warrior lane surface (warm wood)
-    ctx.fillStyle = '#c8a050';
-    ctx.beginPath();
-    ctx.moveTo(wBL, trackBaseY); ctx.lineTo(wBR, trackBaseY);
-    ctx.lineTo(wNR, VP.y); ctx.lineTo(wNL, VP.y);
-    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = isWarrior ? '#c8a050' : '#7a5c3a';
+    ctx.beginPath(); ctx.roundRect(trackX, trackTop, trackW, trackH, 5); ctx.fill();
+    ctx.strokeStyle = isWarrior ? 'rgba(160,100,20,0.5)' : 'rgba(50,30,10,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(trackX, trackTop, trackW, trackH, 5); ctx.stroke();
 
-    // Monster lane surface (dark earth/grass)
-    ctx.fillStyle = '#7a5c3a';
-    ctx.beginPath();
-    ctx.moveTo(mBL, trackBaseY); ctx.lineTo(mBR, trackBaseY);
-    ctx.lineTo(mNR, VP.y); ctx.lineTo(mNL, VP.y);
-    ctx.closePath(); ctx.fill();
-
-    // Wood plank lines on warrior lane
-    ctx.strokeStyle = 'rgba(140,80,20,0.4)'; ctx.lineCap = 'butt';
-    for (let pi = 1; pi <= 9; pi++) {
-      const t3 = pi / 10;
-      const lx = lerp(wNL, wBL, t3);
-      const rx = lerp(wNR, wBR, t3);
-      const py = lerp(VP.y, trackBaseY, t3);
-      ctx.lineWidth = lerp(0.5, 3, t3);
-      ctx.beginPath(); ctx.moveTo(lx, py); ctx.lineTo(rx, py); ctx.stroke();
-    }
-    // Grass texture on monster lane
-    ctx.strokeStyle = 'rgba(40,100,40,0.35)';
-    for (let pi = 1; pi <= 9; pi++) {
-      const t3 = pi / 10;
-      const lx = lerp(mNL, mBL, t3);
-      const rx = lerp(mNR, mBR, t3);
-      const py = lerp(VP.y, trackBaseY, t3);
-      ctx.lineWidth = lerp(0.5, 2.5, t3);
-      ctx.beginPath(); ctx.moveTo(lx, py); ctx.lineTo(rx, py); ctx.stroke();
+    // Texture lines
+    ctx.strokeStyle = isWarrior ? 'rgba(140,80,20,0.3)' : 'rgba(40,100,40,0.3)';
+    for (let i = 1; i <= 9; i++) {
+      const y = trackTop + (i / 10) * trackH;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(trackX, y); ctx.lineTo(trackX + trackW, y); ctx.stroke();
     }
 
-    // Center divider (dashed)
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1;
-    ctx.setLineDash([4, 6]);
-    ctx.beginPath();
-    ctx.moveTo(VP.x, VP.y); ctx.lineTo((wBR + mBL) / 2, trackBaseY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // === PROGRESS FILLS (perspective sub-trapezoids) ===
-    if (this.playerStep > 0) {
-      const pt = this.playerStep / RACE_TOTAL;
-      const startT = 1 - pt; // t=1 is base (start), 0 is finish
-      ctx.fillStyle = 'rgba(255,200,0,0.35)';
-      ctx.beginPath();
-      ctx.moveTo(lerp(wNL, wBL, startT), lerp(VP.y, trackBaseY, startT));
-      ctx.lineTo(lerp(wNR, wBR, startT), lerp(VP.y, trackBaseY, startT));
-      ctx.lineTo(wBR, trackBaseY); ctx.lineTo(wBL, trackBaseY);
-      ctx.closePath(); ctx.fill();
-    }
-    if (this.monsterStep > 0) {
-      const mt = this.monsterStep / RACE_TOTAL;
-      const startT = 1 - mt;
-      ctx.fillStyle = 'rgba(80,200,80,0.28)';
-      ctx.beginPath();
-      ctx.moveTo(lerp(mNL, mBL, startT), lerp(VP.y, trackBaseY, startT));
-      ctx.lineTo(lerp(mNR, mBR, startT), lerp(VP.y, trackBaseY, startT));
-      ctx.lineTo(mBR, trackBaseY); ctx.lineTo(mBL, trackBaseY);
-      ctx.closePath(); ctx.fill();
+    // Progress fill (bottom → up)
+    if (step > 0) {
+      const fillH = (step / RACE_TOTAL) * trackH;
+      const fillY = trackBot - fillH;
+      ctx.fillStyle = isWarrior ? 'rgba(255,200,0,0.45)' : 'rgba(80,200,80,0.40)';
+      ctx.beginPath(); ctx.roundRect(trackX + 2, fillY, trackW - 4, fillH, [0, 0, 4, 4]); ctx.fill();
     }
 
-    // === FENCES ===
-    ctx.strokeStyle = '#8B4513'; ctx.lineCap = 'round';
-    // Draw 2 rails per side per lane
-    const drawFenceRail = (nEdge, bEdge, tVal) => {
-      const x1 = lerp(nEdge, bEdge, tVal * 0.3);
-      const y1 = lerp(VP.y, trackBaseY, tVal * 0.3);
-      const x2 = lerp(nEdge, bEdge, 0.95);
-      const y2 = lerp(VP.y, trackBaseY, 0.95);
-      ctx.lineWidth = lerp(1, 3, tVal * 0.5 + 0.1);
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-    };
-    drawFenceRail(wNL, wBL, 0.3); drawFenceRail(wNL, wBL, 0.65);
-    drawFenceRail(wNR, wBR, 0.3); drawFenceRail(wNR, wBR, 0.65);
-    drawFenceRail(mNL, mBL, 0.3); drawFenceRail(mNL, mBL, 0.65);
-    drawFenceRail(mNR, mBR, 0.3); drawFenceRail(mNR, mBR, 0.65);
-    // Fence posts (verticals at each step)
-    ctx.strokeStyle = '#6b3010';
+    // Step dividers + numbers
     for (let i = 0; i <= RACE_TOTAL; i++) {
-      const t4 = i / RACE_TOTAL;
-      const postT = 1 - t4;
-      const py = lerp(VP.y, trackBaseY, postT);
-      const ph = lerp(4, 16, postT);
-      const postH = lerp(VP.y, trackBaseY, postT * 0.95);
-      ctx.lineWidth = lerp(0.5, 2, postT);
-      // Warrior left fence post
-      const wpx = lerp(wNL, wBL, postT);
-      ctx.beginPath(); ctx.moveTo(wpx, py - ph*0.3); ctx.lineTo(wpx, py + ph*0.7); ctx.stroke();
-      // Warrior right fence post
-      const wprx = lerp(wNR, wBR, postT);
-      ctx.beginPath(); ctx.moveTo(wprx, py - ph*0.3); ctx.lineTo(wprx, py + ph*0.7); ctx.stroke();
-      // Monster left fence post
-      const mpx = lerp(mNL, mBL, postT);
-      ctx.beginPath(); ctx.moveTo(mpx, py - ph*0.3); ctx.lineTo(mpx, py + ph*0.7); ctx.stroke();
-      // Monster right fence post
-      const mprx = lerp(mNR, mBR, postT);
-      ctx.beginPath(); ctx.moveTo(mprx, py - ph*0.3); ctx.lineTo(mprx, py + ph*0.7); ctx.stroke();
-    }
-
-    // === SEGMENT MARKERS & NUMBERS ===
-    for (let i = 0; i <= RACE_TOTAL; i++) {
-      const t5 = i / RACE_TOTAL;
-      const postT = 1 - t5;
-      const py = lerp(VP.y, trackBaseY, postT);
-      // Divider line across both lanes
-      ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = lerp(0.5, 1.5, postT);
-      const leftX = lerp(wNL, wBL, postT);
-      const rightX = lerp(mNR, mBR, postT);
-      ctx.beginPath(); ctx.moveTo(leftX, py); ctx.lineTo(rightX, py); ctx.stroke();
-      // Number label (at warrior lane right edge)
-      if (i < RACE_TOTAL) {
-        const numX = lerp(wNR, wBR, postT) + lerp(2, 8, postT);
-        const numY = py;
-        const fontSize = Math.round(lerp(6, 13, postT));
+      const y = trackTop + (1 - i / RACE_TOTAL) * trackH;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = i === 0 || i === RACE_TOTAL ? 1.8 : 0.8;
+      ctx.setLineDash(i % 2 === 0 ? [] : [2, 3]);
+      ctx.beginPath(); ctx.moveTo(trackX, y); ctx.lineTo(trackX + trackW, y); ctx.stroke();
+      ctx.setLineDash([]);
+      if (i > 0 && i < RACE_TOTAL) {
+        const fontSize = Math.max(7, W * 0.12);
         ctx.font = `bold ${fontSize}px Nunito,sans-serif`;
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillStyle = 'rgba(255,255,255,0.65)';
         ctx.textAlign = 'left';
-        ctx.fillText(i === 0 ? '终' : i, numX + 1, numY + 1);
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.fillText(i === 0 ? '终' : i, numX, numY);
+        ctx.fillText(i, trackX + trackW + 2, y + fontSize * 0.38);
       }
     }
 
-    // === CHECKERED FINISH LINE ===
-    const finishT = 0.03;
-    const finTY = lerp(VP.y, trackBaseY, finishT);
-    const finBY = lerp(VP.y, trackBaseY, finishT + 0.07);
-    const finLeft = lerp(wNL, wBL, finishT);
-    const finRight = lerp(mNR, mBR, finishT);
-    const finW = finRight - finLeft;
-    const finH = finBY - finTY;
-    const cols = 6, rows = 3;
+    // Checkered finish at top
+    const finH = H * 0.035;
+    const cols = 4, rows = 2;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        ctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)';
-        ctx.fillRect(finLeft + (c / cols) * finW, finTY + (r / rows) * finH, finW / cols, finH / rows);
+        ctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)';
+        ctx.fillRect(trackX + (c / cols) * trackW, trackTop + (r / rows) * finH, trackW / cols, finH / rows);
       }
     }
-    // Flag pole
-    ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(VP.x, VP.y - H*0.06); ctx.lineTo(VP.x, finBY); ctx.stroke();
-    // Flag emoji
-    ctx.font = `${Math.max(14, H*0.06)}px serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('🏁', VP.x, VP.y - H*0.06);
 
-    // === CHARACTERS ===
-    const drawChar = (step, nL, nR, bL, bR, drawFn) => {
-      const t6 = step / RACE_TOTAL;
-      const depthT = 1 - t6; // 0=far(small) 1=near(large)
-      const charX = lerp((nL + nR) / 2, (bL + bR) / 2, depthT);
-      const charY = lerp(VP.y, trackBaseY, depthT);
-      const laneWidthAtDepth = lerp(nR - nL, bR - bL, depthT);
-      const charSize = Math.max(14, laneWidthAtDepth * 0.60);
-      drawFn.call(this, ctx, charX, charY - charSize * 0.42, charSize);
-    };
-    drawChar(this.playerStep, wNL, wNR, wBL, wBR, this._drawRaceWarrior);
-    drawChar(this.monsterStep, mNL, mNR, mBL, mBR, this._drawRaceMonster);
+    // Top emoji (finish/start)
+    ctx.textAlign = 'center';
+    const topEmojiSize = Math.max(12, W * 0.28);
+    ctx.font = `${topEmojiSize}px serif`;
+    ctx.fillText(isWarrior ? '🏰' : '🌋', W / 2, trackTop - 3);
+
+    // Bottom emoji (start)
+    const botEmojiSize = Math.max(10, W * 0.22);
+    ctx.font = `${botEmojiSize}px serif`;
+    ctx.fillText('🚩', W / 2, trackBot + botEmojiSize * 0.9);
+
+    // Character
+    const charY = trackBot - (step / RACE_TOTAL) * trackH;
+    const charSize = Math.max(20, trackW * 0.92);
+    if (isWarrior) {
+      this._drawRaceWarrior(ctx, W / 2, charY - charSize * 0.38, charSize);
+    } else {
+      this._drawRaceMonster(ctx, W / 2, charY - charSize * 0.38, charSize);
+    }
+
+    // Step badge above character
+    if (step > 0) {
+      const badgeY = charY - charSize * 0.80;
+      ctx.font = `bold ${Math.max(9, W * 0.17)}px Nunito,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isWarrior ? '#FFD700' : '#7CFC00';
+      ctx.fillText(step, W / 2, badgeY);
+    }
   }
 
   _drawRaceWarrior(ctx, cx, cy, size) {
@@ -3220,12 +3121,14 @@ class RaceGame {
   _bindEvents() {
     window.addEventListener('resize', () => {
       this._resizeCanvas(); this._clearCanvas();
-      const rc = document.getElementById('race-canvas');
-      const wrap = document.getElementById('race-canvas-wrap');
-      if (rc && wrap && wrap.clientWidth > 0 && wrap.clientHeight > 0) {
-        rc.width = wrap.clientWidth; rc.height = wrap.clientHeight;
-        this._drawRaceScene();
-      }
+      ['warrior', 'monster'].forEach(which => {
+        const wrap = document.getElementById(`${which}-canvas-wrap`);
+        const cv = document.getElementById(`${which}-canvas`);
+        if (cv && wrap && wrap.clientWidth > 0 && wrap.clientHeight > 0) {
+          cv.width = wrap.clientWidth; cv.height = wrap.clientHeight;
+        }
+      });
+      this._drawRaceScene();
     });
     const c = this.canvas;
     const pos = e => {
@@ -3411,6 +3314,7 @@ class RaceGame {
     this.gameEnded = true;
     clearInterval(this.monsterTimer);
     this._cancelAutoSubmit();
+    this._teardownUI();
     window.location.href = 'menu.html';
   }
 

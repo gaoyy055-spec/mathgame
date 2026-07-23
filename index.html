@@ -952,27 +952,28 @@ body {
     <span class="rg-star" style="left:20%;top:85%;font-size:1.4rem;animation-delay:0.4s">🌟</span>
     <span class="rg-star" style="left:75%;top:88%;font-size:1.6rem;animation-delay:0.2s">⭐</span>
   </div>
-  <div id="readygo-text" style="
-    font-size:clamp(96px,22vw,220px); font-weight:900;
-    color:white; letter-spacing:6px;
-    font-family:'Nunito',system-ui,sans-serif;
-    text-shadow:
-      0 6px 0 rgba(0,0,0,0.22),
-      0 0 60px rgba(255,220,0,0.7),
-      0 0 120px rgba(255,150,0,0.35);
+  <div id="readygo-card" style="
+    background:rgba(255,255,255,0.18);
+    border:4px solid rgba(255,255,255,0.55);
+    border-radius:36px;
+    padding:48px 80px;
+    box-shadow:0 12px 60px rgba(0,0,0,0.25), 0 0 80px rgba(255,220,0,0.25);
+    backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
     animation:readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    line-height:1;
-    -webkit-text-stroke: 3px rgba(0,0,0,0.12);
-  "></div>
-  <div id="readygo-sub" style="
-    font-size:clamp(22px,5vw,42px); font-weight:800;
-    color:rgba(255,255,255,0.92); letter-spacing:3px;
-    font-family:'Nunito',system-ui,sans-serif;
-    text-shadow:0 2px 8px rgba(0,0,0,0.3);
-    margin-top:12px;
-    opacity:0;
-    transition:opacity 0.2s;
-  "></div>
+  ">
+    <div id="readygo-text" style="
+      font-size:clamp(120px,28vw,280px); font-weight:900;
+      color:white; letter-spacing:8px;
+      font-family:'Nunito',system-ui,sans-serif;
+      text-shadow:
+        0 8px 0 rgba(0,0,0,0.2),
+        0 0 80px rgba(255,220,0,0.8),
+        0 0 160px rgba(255,150,0,0.4);
+      line-height:1;
+      -webkit-text-stroke: 4px rgba(0,0,0,0.1);
+    "></div>
+  </div>
 </div>
 
 <style>
@@ -1399,11 +1400,10 @@ function playGoSound() {
 function showReadyGo(text, color, bgStyle) {
   const overlay = document.getElementById('readygo-overlay');
   const el = document.getElementById('readygo-text');
-  const sub = document.getElementById('readygo-sub');
+  const card = document.getElementById('readygo-card');
   if (bgStyle) {
     overlay.style.background = bgStyle;
   }
-  // Reset any loading-screen styles before showing
   el.style.fontSize = '';
   el.style.fontFamily = '';
   el.style.fontWeight = '';
@@ -1411,31 +1411,18 @@ function showReadyGo(text, color, bgStyle) {
   el.style.textShadow = '';
   el.style.color = color;
   el.textContent = text;
-
-  // Sub-text per word
-  const subMap = { 'READY': '准备好了吗？', 'GO!': '冲鸭！加油！' };
-  if (sub) {
-    sub.textContent = subMap[text] || '';
-    sub.style.color = color;
-    sub.style.opacity = '0';
-  }
-
   overlay.style.display = 'flex';
 
   return new Promise(resolve => {
     const doShow = () => {
+      if (card) { card.style.animation = 'none'; void card.offsetWidth; card.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)'; }
       el.style.animation = 'none';
       void el.offsetWidth;
-      el.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
-      // Fade in sub-text slightly after
-      if (sub) {
-        setTimeout(() => { sub.style.opacity = '1'; }, 200);
-      }
+      el.style.animation = '';
       setTimeout(resolve, 800);
     };
 
     if (el.textContent && el.style.opacity !== '0') {
-      if (sub) sub.style.opacity = '0';
       el.style.animation = 'readygo-fade-out 0.18s ease-in forwards';
       setTimeout(doShow, 180);
     } else {

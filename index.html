@@ -1452,18 +1452,9 @@ function runIntroSequence(level, mode = 'visual') {
     introEl.style.backdropFilter = 'blur(8px)';
     introEl.style.display = 'flex';
 
-    // After 2s hide intro, show READY→GO without hiding overlay between them
-    setTimeout(async () => {
+    // After 2s hide intro, go straight into game
+    setTimeout(() => {
       introEl.style.display = 'none';
-      // Clear any stale text (e.g. loading screen) before showing READY
-      document.getElementById('readygo-text').textContent = '';
-      playReadySound();
-      await showReadyGo('READY', '#FFD700', bgStyle);
-      await new Promise(r => setTimeout(r, 200));
-      playGoSound();
-      await showReadyGo('GO!', '#22c55e', bgStyle);
-      await new Promise(r => setTimeout(r, 100));
-      document.getElementById('readygo-overlay').style.display = 'none';
       resolve();
     }, 2000);
   });

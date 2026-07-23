@@ -1979,9 +1979,36 @@ window.addEventListener('load', async () => {
   // In audio mode, VoiceGame handles everything — no OCR needed; start pinging in visual mode only
   const recognizer = mode === 'audio' ? { ready: true, waitReady: () => Promise.resolve() } : new DigitRecognizer();
 
-  // In visual mode, wait silently for OCR to be ready (no loading overlay)
+  // In visual mode, show loading screen until OCR is ready
   if (mode !== 'audio' && !recognizer.ready) {
+    const overlay = document.getElementById('readygo-overlay');
+    const textEl  = document.getElementById('readygo-text');
+    const card    = document.getElementById('readygo-card');
+    overlay.style.display = 'flex';
+    // Reset gradient styles from READY/GO
+    textEl.style.background = '';
+    textEl.style.webkitBackgroundClip = '';
+    textEl.style.webkitTextFillColor = '';
+    textEl.style.backgroundClip = '';
+    textEl.style.color = '#555';
+    textEl.style.fontSize = 'clamp(22px,5vw,38px)';
+    textEl.style.fontFamily = "'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif";
+    textEl.style.fontWeight = '900';
+    textEl.style.letterSpacing = '4px';
+    textEl.style.textShadow = 'none';
+    if (card) card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.15)';
+    let dots = 0;
+    const dotTimer = setInterval(() => {
+      dots = (dots + 1) % 4;
+      textEl.textContent = '识别引擎加载中' + '．'.repeat(dots);
+    }, 600);
+    textEl.textContent = '识别引擎加载中';
     await recognizer.waitReady();
+    clearInterval(dotTimer);
+    overlay.style.display = 'none';
+    // Reset font size so READY/GO use their own sizing
+    textEl.style.fontSize = '';
+    textEl.style.color = '';
   }
 
   runIntroSequence(level, mode).then(async () => {

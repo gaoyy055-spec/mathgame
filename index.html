@@ -936,58 +936,28 @@ body {
 <div id="readygo-overlay" style="
   position:fixed; inset:0; z-index:600;
   display:none; align-items:center; justify-content:center;
-  background:rgba(0,0,0,0.45);
   backdrop-filter:blur(10px);
   pointer-events:none;
-  flex-direction:column; gap:0;
 ">
-  <!-- decorative stars -->
-  <div id="readygo-stars" style="
-    position:absolute; inset:0; pointer-events:none; overflow:hidden;
-  ">
-    <span class="rg-star" style="left:8%;top:12%;font-size:2.2rem;animation-delay:0s">⭐</span>
-    <span class="rg-star" style="left:88%;top:10%;font-size:1.8rem;animation-delay:0.15s">✨</span>
-    <span class="rg-star" style="left:5%;top:72%;font-size:1.6rem;animation-delay:0.3s">🌟</span>
-    <span class="rg-star" style="left:90%;top:75%;font-size:2rem;animation-delay:0.1s">⭐</span>
-    <span class="rg-star" style="left:50%;top:6%;font-size:1.5rem;animation-delay:0.25s">✨</span>
-    <span class="rg-star" style="left:20%;top:85%;font-size:1.4rem;animation-delay:0.4s">🌟</span>
-    <span class="rg-star" style="left:75%;top:88%;font-size:1.6rem;animation-delay:0.2s">⭐</span>
-  </div>
-  <div id="readygo-card" style="
-    background:white;
-    border-radius:40px;
-    padding:52px 96px;
-    box-shadow:0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(255,255,255,0.6);
-    display:flex; align-items:center; justify-content:center;
+  <div id="readygo-text" style="
+    font-size:clamp(36px,8vw,64px); font-weight:900;
+    letter-spacing:6px;
+    font-family:'Nunito',system-ui,sans-serif;
+    color:white;
+    text-shadow:0 4px 24px rgba(0,0,0,0.35), 0 2px 0 rgba(0,0,0,0.2);
     animation:readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  ">
-    <div id="readygo-text" style="
-      font-size:clamp(120px,28vw,280px); font-weight:900;
-      letter-spacing:8px;
-      font-family:'Nunito',system-ui,sans-serif;
-      line-height:1;
-    "></div>
-  </div>
+    line-height:1;
+  "></div>
 </div>
 
 <style>
 @keyframes readygo-pop {
-  from { transform:scale(0.2) rotate(-15deg); opacity:0; filter:blur(8px); }
-  to   { transform:scale(1) rotate(0deg); opacity:1; filter:blur(0); }
+  from { transform:scale(0.4) rotate(-8deg); opacity:0; }
+  to   { transform:scale(1) rotate(0deg); opacity:1; }
 }
 @keyframes readygo-fade-out {
   from { opacity:1; transform:scale(1); }
-  to   { opacity:0; transform:scale(1.2); filter:blur(4px); }
-}
-@keyframes rg-star-float {
-  0%   { transform:translateY(0) scale(1) rotate(0deg); opacity:0.9; }
-  50%  { transform:translateY(-18px) scale(1.2) rotate(20deg); opacity:1; }
-  100% { transform:translateY(0) scale(1) rotate(0deg); opacity:0.9; }
-}
-.rg-star {
-  position:absolute;
-  animation:rg-star-float 1.6s ease-in-out infinite;
-  filter:drop-shadow(0 2px 6px rgba(255,220,0,0.6));
+  to   { opacity:0; transform:scale(1.1); }
 }
 </style>
 
@@ -1475,39 +1445,28 @@ function playGoSound() {
 function showReadyGo(text, color, bgStyle) {
   const overlay = document.getElementById('readygo-overlay');
   const el = document.getElementById('readygo-text');
-  const card = document.getElementById('readygo-card');
-  overlay.style.background = 'rgba(0,0,0,0.45)';
 
-  // Set text first, then apply styles
+  // Use same gradient background as intro overlay
+  overlay.style.background = bgStyle || 'rgba(0,0,0,0.45)';
+
   el.removeAttribute('style');
   el.textContent = text;
   el.style.fontFamily = "'Nunito',system-ui,sans-serif";
-  el.style.fontSize = 'clamp(120px,28vw,280px)';
+  el.style.fontSize = 'clamp(36px,8vw,64px)';
   el.style.fontWeight = '900';
-  el.style.letterSpacing = '8px';
+  el.style.letterSpacing = '6px';
   el.style.lineHeight = '1';
-  el.style.display = 'block';
-
-  // Colorful gradient per word
-  if (text === 'READY') {
-    el.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FFD93D 40%, #6BCB77 70%, #4D96FF 100%)';
-    el.style.webkitBackgroundClip = 'text';
-    el.style.backgroundClip = 'text';
-    el.style.webkitTextFillColor = 'transparent';
-    if (card) card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(255,107,107,0.3)';
-  } else {
-    el.style.background = 'linear-gradient(135deg, #22c55e 0%, #06d6a0 100%)';
-    el.style.webkitBackgroundClip = 'text';
-    el.style.backgroundClip = 'text';
-    el.style.webkitTextFillColor = 'transparent';
-    if (card) card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(34,197,94,0.35)';
-  }
+  el.style.color = text === 'READY' ? '#FFD700' : '#7CFC00';
+  el.style.textShadow = '0 4px 24px rgba(0,0,0,0.35), 0 2px 0 rgba(0,0,0,0.2)';
+  el.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
 
   overlay.style.display = 'flex';
 
   return new Promise(resolve => {
     const doShow = () => {
-      if (card) { card.style.animation = 'none'; void card.offsetWidth; card.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)'; }
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
       setTimeout(resolve, 800);
     };
 

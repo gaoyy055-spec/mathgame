@@ -816,7 +816,8 @@ body {
   <div class="pk-side monster-side">
     <div class="character-wrap" id="monster-wrap">
       <div class="crown">怪兽</div>
-      <svg class="character-svg" viewBox="0 0 52 64">
+      <!-- Default monster (lv1, lv3+) -->
+      <svg id="monster-svg-default" class="character-svg" viewBox="0 0 52 64">
         <!-- horns -->
         <path d="M14 6L11 16L17 10L14 6Z" fill="#8A30C0"/>
         <path d="M26 2L24 12L29 4L26 2Z" fill="#8A30C0"/>
@@ -885,6 +886,56 @@ body {
         <!-- right foot -->
         <path d="M35 62C36 63.5 36 64.5 34.5 64.5C33.5 64.5 33 63.5 32 63.5Z" fill="#5020A0"/>
         <path d="M32 63.5C32 64.5 31.5 65 30.5 64.5C29.5 64 29.5 63 30 62Z" fill="#5020A0"/>
+      </svg>
+      <!-- Lv2 monster: Rune Golem (stone golem with glowing eyes) -->
+      <svg id="monster-svg-lv2" class="character-svg" style="display:none" viewBox="140 70 320 480" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="rg-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="5" result="blur1"/>
+            <feGaussianBlur stdDeviation="10" result="blur2"/>
+            <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- arms back -->
+        <path d="M 170,290 C 100,290 60,350 50,420 C 40,490 60,560 70,620 L 220,620 C 220,530 200,470 170,410 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M 430,290 C 500,290 540,350 550,420 C 560,490 540,560 530,620 L 380,620 C 380,530 400,470 430,410 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M 180,480 C 180,550 220,620 220,620 L 380,620 C 380,620 420,550 420,480 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- neck -->
+        <path d="M 220,290 C 270,330 330,330 380,290 C 400,300 420,320 410,360 C 350,380 250,380 190,360 C 180,320 200,300 220,290 Z" fill="#C5B29B" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- chest -->
+        <path d="M 180,370 C 220,400 250,400 265,370 L 255,460 C 200,450 160,420 160,390 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M 420,370 C 380,400 350,400 335,370 L 345,460 C 400,450 440,420 440,390 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M 265,370 C 285,380 315,380 335,370 L 345,465 C 315,485 285,485 255,465 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- abs -->
+        <path d="M 250,475 C 280,500 320,500 350,475 L 360,540 C 320,560 280,560 240,540 Z" fill="#C5B29B" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- head top -->
+        <path d="M 230,160 C 230,80 370,80 370,160 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- jaw -->
+        <path d="M 215,225 C 215,280 250,310 300,310 C 350,310 385,280 385,225 C 360,255 240,255 215,225 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- cheeks -->
+        <path d="M 220,180 L 220,235 C 260,250 340,250 380,235 L 380,180 Z" fill="#B19E88" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- brow bone -->
+        <path d="M 210,185 C 210,150 250,150 285,160 L 315,160 C 350,150 390,150 390,185 L 390,195 C 350,175 250,175 210,195 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- nose -->
+        <path d="M 285,165 L 315,165 L 325,230 L 275,230 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+        <!-- moss/plants -->
+        <path d="M 235,115 C 220,95 195,95 190,80 C 215,80 235,90 235,115 Z" fill="#A4D855" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M 235,115 C 215,100 215,80 225,60 C 235,80 245,95 235,115 Z" fill="#88C340" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M 310,90 Q 320,70 340,75 Q 360,65 375,85 Q 395,95 380,120 Q 370,135 365,110 Q 330,110 310,90 Z" fill="#7CB342" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+        <!-- eyes glow -->
+        <ellipse cx="255" cy="205" rx="16" ry="14" fill="#00E5FF" filter="url(#rg-glow)"/>
+        <ellipse cx="255" cy="205" rx="16" ry="14" fill="#E0FFFF" stroke="#3A2D23" stroke-width="3"/>
+        <circle cx="250" cy="200" r="4" fill="#FFFFFF"/>
+        <ellipse cx="345" cy="205" rx="16" ry="14" fill="#00E5FF" filter="url(#rg-glow)"/>
+        <ellipse cx="345" cy="205" rx="16" ry="14" fill="#E0FFFF" stroke="#3A2D23" stroke-width="3"/>
+        <circle cx="340" cy="200" r="4" fill="#FFFFFF"/>
+        <!-- rune on chest -->
+        <g filter="url(#rg-glow)" stroke="#00E5FF" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 285,395 V 455 M 285,395 H 305 A 15 15 0 0 1 305,425 H 285 M 295,425 L 320,455"/>
+        </g>
+        <g stroke="#E0FFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M 285,395 V 455 M 285,395 H 305 A 15 15 0 0 1 305,425 H 285 M 295,425 L 320,455"/>
+        </g>
       </svg>
     </div>
     <div class="progress-container">
@@ -3293,6 +3344,14 @@ class VoiceGame {
     // Scratch canvas
     this.canvas = document.getElementById('voice-drawing-canvas');
     this.ctx = this.canvas.getContext('2d');
+
+    // Level 2: replace monster SVG with Rune Golem
+    document.getElementById('pk-section').style.display = 'flex';
+    document.getElementById('question-section').style.display = 'flex';
+    if (this.level === 2) {
+      document.getElementById('monster-svg-default').style.display = 'none';
+      document.getElementById('monster-svg-lv2').style.display = '';
+    }
     this._resizeScratch();
     this._buildDots();
     this._bindEvents();

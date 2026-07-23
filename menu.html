@@ -320,7 +320,31 @@
     <!-- Lv2 -->
     <div id="card2" class="island-card anim-slide flex-1 min-w-0" style="animation-delay:0.3s" onclick="selectLevel(2)">
       <div class="grass w-full flex flex-col items-center pt-6 px-2" style="background:#eab308;border-color:#ca8a04">
-        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:0.5s">🍉</div>
+        <div class="text-5xl -mt-11 mb-1.5 drop-shadow-lg anim-float" style="animation-delay:0.5s;line-height:1">
+          <!-- Rune Golem head -->
+          <svg viewBox="180 75 240 200" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="rg-glow-menu" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="5" result="blur1"/>
+                <feGaussianBlur stdDeviation="10" result="blur2"/>
+                <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <path d="M 230,160 C 230,80 370,80 370,160 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M 215,225 C 215,280 250,310 300,310 C 350,310 385,280 385,225 C 360,255 240,255 215,225 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M 220,180 L 220,235 C 260,250 340,250 380,235 L 380,180 Z" fill="#B19E88" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M 210,185 C 210,150 250,150 285,160 L 315,160 C 350,150 390,150 390,185 L 390,195 C 350,175 250,175 210,195 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M 285,165 L 315,165 L 325,230 L 275,230 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M 235,115 C 215,100 215,80 225,60 C 235,80 245,95 235,115 Z" fill="#88C340" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M 310,90 Q 340,65 375,85 Q 395,95 380,120 Q 365,110 330,110 Q 310,90 310,90 Z" fill="#7CB342" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+            <ellipse cx="255" cy="205" rx="16" ry="14" fill="#00E5FF" filter="url(#rg-glow-menu)"/>
+            <ellipse cx="255" cy="205" rx="16" ry="14" fill="#E0FFFF" stroke="#3A2D23" stroke-width="3"/>
+            <circle cx="250" cy="200" r="4" fill="#FFFFFF"/>
+            <ellipse cx="345" cy="205" rx="16" ry="14" fill="#00E5FF" filter="url(#rg-glow-menu)"/>
+            <ellipse cx="345" cy="205" rx="16" ry="14" fill="#E0FFFF" stroke="#3A2D23" stroke-width="3"/>
+            <circle cx="340" cy="200" r="4" fill="#FFFFFF"/>
+          </svg>
+        </div>
         <div class="font-black text-white text-sm drop-shadow tracking-wide">除法入门</div>
         <div class="text-xs text-yellow-100 font-bold mb-1">1~6 除法</div>
       </div>

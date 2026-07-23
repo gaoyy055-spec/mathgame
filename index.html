@@ -30,31 +30,19 @@ body {
 /* ===== SECTION 1: RACE (LEVEL 3) ===== */
 #race-section {
   display: none;
-  flex: 0 0 22%;
+  flex: 0 0 48%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2px 12px 2px;
-  background: linear-gradient(180deg, #87CEEB 0%, #98D8C8 30%, #5dbc5d 60%, #4a9e4a 100%);
-  border-bottom: 4px solid #3a8a3a;
+  padding: 2px 0 0;
+  background: #87CEEB;
+  border-bottom: 4px solid #5a3e1b;
   position: relative; z-index: 1;
   box-shadow: 0 4px 15px rgba(0,100,0,0.18);
-  gap: 2px;
+  gap: 0;
   overflow: hidden;
 }
 #race-section.active { display: flex; }
-
-/* Clouds in background */
-#race-section::before {
-  content: '';
-  position: absolute; top: 4px; left: 0; right: 0; height: 26%;
-  background:
-    radial-gradient(ellipse 50px 18px at 15% 50%, rgba(255,255,255,0.7) 80%, transparent 100%),
-    radial-gradient(ellipse 36px 14px at 30% 40%, rgba(255,255,255,0.5) 80%, transparent 100%),
-    radial-gradient(ellipse 60px 20px at 65% 55%, rgba(255,255,255,0.65) 80%, transparent 100%),
-    radial-gradient(ellipse 40px 16px at 82% 45%, rgba(255,255,255,0.5) 80%, transparent 100%);
-  pointer-events: none;
-}
 
 #race-header {
   display: flex; justify-content: space-between; align-items: center;
@@ -2769,127 +2757,290 @@ class RaceGame {
     const ctx = rc.getContext('2d');
     const W = rc.width, H = rc.height;
     if (W === 0 || H === 0) return;
+    const lerp = (a, b, t) => a + (b - a) * t;
 
-    // === BACKGROUND: sky ===
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.45);
-    skyGrad.addColorStop(0, '#87CEEB');
+    // === SKY ===
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.52);
+    skyGrad.addColorStop(0, '#4a90d9');
+    skyGrad.addColorStop(0.55, '#87CEEB');
     skyGrad.addColorStop(1, '#c8eaf8');
     ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, W, H * 0.45);
+    ctx.fillRect(0, 0, W, H * 0.52);
 
-    // Clouds
-    ctx.fillStyle = 'rgba(255,255,255,0.82)';
-    const clouds = [[0.12,0.14,48,16],[0.38,0.10,62,18],[0.68,0.16,50,15],[0.88,0.08,38,13]];
-    clouds.forEach(([cx,cy,rw,rh]) => {
-      ctx.beginPath(); ctx.ellipse(W*cx, H*cy, rw, rh, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(W*cx-rw*0.4, H*cy+rh*0.15, rw*0.65, rh*0.8, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(W*cx+rw*0.4, H*cy+rh*0.1, rw*0.6, rh*0.75, 0, 0, Math.PI*2); ctx.fill();
+    // === CLOUDS ===
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    [[0.15,0.08,W*0.09,H*0.045],[0.45,0.05,W*0.10,H*0.04],[0.75,0.09,W*0.08,H*0.038]].forEach(([fcx,fcy,rw,rh]) => {
+      const cx2 = W*fcx, cy2 = H*fcy;
+      ctx.beginPath(); ctx.ellipse(cx2, cy2, rw, rh, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx2-rw*0.45, cy2+rh*0.2, rw*0.62, rh*0.78, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx2+rw*0.45, cy2+rh*0.15, rw*0.58, rh*0.72, 0, 0, Math.PI*2); ctx.fill();
     });
 
-    // === GRASS field (bottom 55%) ===
-    const grassGrad = ctx.createLinearGradient(0, H*0.45, 0, H);
-    grassGrad.addColorStop(0, '#5dbc5d');
-    grassGrad.addColorStop(1, '#3a8a3a');
+    // === GROUND ===
+    const grassGrad = ctx.createLinearGradient(0, H*0.50, 0, H);
+    grassGrad.addColorStop(0, '#6abf6a');
+    grassGrad.addColorStop(1, '#2e7d32');
     ctx.fillStyle = grassGrad;
-    ctx.fillRect(0, H*0.45, W, H*0.55);
+    ctx.fillRect(0, H*0.50, W, H*0.50);
 
-    // Grass texture lines
-    ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
-    for (let i = 0; i < 8; i++) {
-      const y = H * 0.45 + (H * 0.55 / 8) * i;
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    // === LEFT CASTLE ===
+    const cxBase = W*0.01;
+    // Wall
+    ctx.fillStyle = '#f4a0b0';
+    ctx.fillRect(cxBase + W*0.01, H*0.25, W*0.15, H*0.27);
+    // Left tower
+    ctx.fillStyle = '#e8909f';
+    ctx.fillRect(cxBase, H*0.18, W*0.055, H*0.34);
+    // Right tower
+    ctx.fillRect(cxBase + W*0.105, H*0.20, W*0.055, H*0.32);
+    // Battlements on wall top (4 merlons)
+    ctx.fillStyle = '#e8909f';
+    for (let m = 0; m < 4; m++) {
+      ctx.fillRect(cxBase + W*0.02 + m * W*0.033, H*0.21, W*0.020, H*0.04);
+    }
+    // Blue cone roofs
+    ctx.fillStyle = '#3a6fd8';
+    // Left tower cone
+    ctx.beginPath();
+    ctx.moveTo(cxBase, H*0.18); ctx.lineTo(cxBase + W*0.055, H*0.18);
+    ctx.lineTo(cxBase + W*0.027, H*0.07); ctx.closePath(); ctx.fill();
+    // Right tower cone
+    ctx.beginPath();
+    ctx.moveTo(cxBase + W*0.105, H*0.20);
+    ctx.lineTo(cxBase + W*0.160, H*0.20);
+    ctx.lineTo(cxBase + W*0.132, H*0.09); ctx.closePath(); ctx.fill();
+    // Arrow-slit windows
+    ctx.fillStyle = '#2c1810';
+    [[cxBase+W*0.015,H*0.22],[cxBase+W*0.120,H*0.24]].forEach(([wx,wy]) => {
+      ctx.fillRect(wx, wy, W*0.012, H*0.055);
+    });
+    // Gate arch
+    ctx.fillStyle = '#2c1810';
+    ctx.beginPath();
+    ctx.arc(cxBase + W*0.082, H*0.46, W*0.022, Math.PI, 0); ctx.fill();
+    ctx.fillRect(cxBase + W*0.060, H*0.46, W*0.044, H*0.06);
+    // Castle outline
+    ctx.strokeStyle = '#8a5050'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(cxBase + W*0.01, H*0.25, W*0.15, H*0.27);
+    ctx.strokeRect(cxBase, H*0.18, W*0.055, H*0.34);
+    ctx.strokeRect(cxBase + W*0.105, H*0.20, W*0.055, H*0.32);
+
+    // === RIGHT CAVE / MONSTER FACE ===
+    const caX = W * 0.82;
+    // Rocky hill
+    ctx.fillStyle = '#3d2b1f';
+    ctx.beginPath();
+    ctx.moveTo(W*0.80, H*0.55);
+    ctx.quadraticCurveTo(W*0.82, H*0.08, W*0.91, H*0.06);
+    ctx.quadraticCurveTo(W*1.00, H*0.08, W*1.00, H*0.55);
+    ctx.closePath(); ctx.fill();
+    // Hill highlight
+    ctx.fillStyle = '#5a3e2a';
+    ctx.beginPath();
+    ctx.quadraticCurveTo(W*0.88, H*0.06, W*0.91, H*0.06);
+    ctx.quadraticCurveTo(W*0.97, H*0.10, W*0.97, H*0.22);
+    ctx.quadraticCurveTo(W*0.93, H*0.12, W*0.89, H*0.10);
+    ctx.closePath(); ctx.fill();
+    // Cave mouth (bottom-half ellipse)
+    ctx.fillStyle = '#1a0f0a';
+    ctx.beginPath();
+    ctx.ellipse(W*0.91, H*0.43, W*0.07, H*0.11, 0, Math.PI, 0); ctx.fill();
+    // Monster brows above cave
+    ctx.strokeStyle = '#8b5a2a'; ctx.lineWidth = Math.max(2, W*0.008); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(W*0.845, H*0.25); ctx.quadraticCurveTo(W*0.862, H*0.21, W*0.882, H*0.25); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W*0.938, H*0.25); ctx.quadraticCurveTo(W*0.958, H*0.21, W*0.975, H*0.25); ctx.stroke();
+    // Cave eyes (glowing yellow)
+    ctx.fillStyle = '#f0c030';
+    ctx.beginPath(); ctx.arc(W*0.869, H*0.29, W*0.018, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(W*0.951, H*0.29, W*0.018, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a0f0a';
+    ctx.beginPath(); ctx.arc(W*0.869, H*0.29, W*0.009, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(W*0.951, H*0.29, W*0.009, 0, Math.PI*2); ctx.fill();
+    // Jagged teeth
+    ctx.fillStyle = '#ddd';
+    for (let t2 = 0; t2 < 5; t2++) {
+      const tx = W*0.868 + t2 * W*0.013 - W*0.026;
+      ctx.beginPath();
+      ctx.moveTo(tx, H*0.435); ctx.lineTo(tx + W*0.006, H*0.43); ctx.lineTo(tx + W*0.013, H*0.435);
+      ctx.closePath(); ctx.fill();
     }
 
-    // === TRACK LANES ===
-    // Two lanes: warrior (top lane), monster (bottom lane)
-    const trackTop = H * 0.42;
-    const laneH = H * 0.22;
-    const laneGap = H * 0.04;
-    const lane1Y = trackTop;           // warrior lane top edge
-    const lane2Y = trackTop + laneH + laneGap; // monster lane top edge
-    const trackLeft = W * 0.04;
-    const trackRight = W * 0.95;
-    const trackW = trackRight - trackLeft;
+    // === PERSPECTIVE TRACK ===
+    const VP = { x: W * 0.50, y: H * 0.30 };
+    const trackBaseY = H * 0.97;
+    // Warrior lane (left side)
+    const wNL = VP.x - W*0.10; // near left
+    const wNR = VP.x - W*0.01; // near right
+    const wBL = W * 0.04;       // base left
+    const wBR = W * 0.46;       // base right
+    // Monster lane (right side)
+    const mNL = VP.x + W*0.01;
+    const mNR = VP.x + W*0.10;
+    const mBL = W * 0.54;
+    const mBR = W * 0.96;
 
-    // Lane 1 (warrior) — golden yellow
-    ctx.fillStyle = '#f5e06a';
-    ctx.strokeStyle = '#c8a200'; ctx.lineWidth = 2;
+    // Warrior lane surface (warm wood)
+    ctx.fillStyle = '#c8a050';
     ctx.beginPath();
-    ctx.roundRect(trackLeft, lane1Y, trackW, laneH, 8);
-    ctx.fill(); ctx.stroke();
+    ctx.moveTo(wBL, trackBaseY); ctx.lineTo(wBR, trackBaseY);
+    ctx.lineTo(wNR, VP.y); ctx.lineTo(wNL, VP.y);
+    ctx.closePath(); ctx.fill();
 
-    // Lane 2 (monster) — purple-ish
-    ctx.fillStyle = '#d8b4fe';
-    ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2;
+    // Monster lane surface (dark earth/grass)
+    ctx.fillStyle = '#7a5c3a';
     ctx.beginPath();
-    ctx.roundRect(trackLeft, lane2Y, trackW, laneH, 8);
-    ctx.fill(); ctx.stroke();
+    ctx.moveTo(mBL, trackBaseY); ctx.lineTo(mBR, trackBaseY);
+    ctx.lineTo(mNR, VP.y); ctx.lineTo(mNL, VP.y);
+    ctx.closePath(); ctx.fill();
 
-    // Lane labels on left
-    ctx.font = `bold ${Math.max(10, H*0.06)}px Nunito,sans-serif`;
-    ctx.fillStyle = '#7a5200'; ctx.textAlign = 'right';
-    ctx.fillText('勇士', trackLeft - 4, lane1Y + laneH * 0.65);
-    ctx.fillStyle = '#4c1d95';
-    ctx.fillText('怪兽', trackLeft - 4, lane2Y + laneH * 0.65);
-
-    // Segment dividers on both lanes
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1.5;
-    for (let i = 1; i < RACE_TOTAL; i++) {
-      const x = trackLeft + (trackW / RACE_TOTAL) * i;
-      ctx.beginPath(); ctx.moveTo(x, lane1Y+2); ctx.lineTo(x, lane1Y+laneH-2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x, lane2Y+2); ctx.lineTo(x, lane2Y+laneH-2); ctx.stroke();
+    // Wood plank lines on warrior lane
+    ctx.strokeStyle = 'rgba(140,80,20,0.4)'; ctx.lineCap = 'butt';
+    for (let pi = 1; pi <= 9; pi++) {
+      const t3 = pi / 10;
+      const lx = lerp(wNL, wBL, t3);
+      const rx = lerp(wNR, wBR, t3);
+      const py = lerp(VP.y, trackBaseY, t3);
+      ctx.lineWidth = lerp(0.5, 3, t3);
+      ctx.beginPath(); ctx.moveTo(lx, py); ctx.lineTo(rx, py); ctx.stroke();
+    }
+    // Grass texture on monster lane
+    ctx.strokeStyle = 'rgba(40,100,40,0.35)';
+    for (let pi = 1; pi <= 9; pi++) {
+      const t3 = pi / 10;
+      const lx = lerp(mNL, mBL, t3);
+      const rx = lerp(mNR, mBR, t3);
+      const py = lerp(VP.y, trackBaseY, t3);
+      ctx.lineWidth = lerp(0.5, 2.5, t3);
+      ctx.beginPath(); ctx.moveTo(lx, py); ctx.lineTo(rx, py); ctx.stroke();
     }
 
-    // Finish line (double stripes)
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    const fxLeft = trackRight - 6;
-    for (let row = 0; row < 6; row++) {
-      for (let col = 0; col < 2; col++) {
-        if ((row + col) % 2 === 0) {
-          ctx.fillRect(fxLeft + col*3, lane1Y + row*(laneH/6), 3, laneH/6);
-          ctx.fillRect(fxLeft + col*3, lane2Y + row*(laneH/6), 3, laneH/6);
-        }
+    // Center divider (dashed)
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(VP.x, VP.y); ctx.lineTo((wBR + mBL) / 2, trackBaseY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // === PROGRESS FILLS (perspective sub-trapezoids) ===
+    if (this.playerStep > 0) {
+      const pt = this.playerStep / RACE_TOTAL;
+      const startT = 1 - pt; // t=1 is base (start), 0 is finish
+      ctx.fillStyle = 'rgba(255,200,0,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(lerp(wNL, wBL, startT), lerp(VP.y, trackBaseY, startT));
+      ctx.lineTo(lerp(wNR, wBR, startT), lerp(VP.y, trackBaseY, startT));
+      ctx.lineTo(wBR, trackBaseY); ctx.lineTo(wBL, trackBaseY);
+      ctx.closePath(); ctx.fill();
+    }
+    if (this.monsterStep > 0) {
+      const mt = this.monsterStep / RACE_TOTAL;
+      const startT = 1 - mt;
+      ctx.fillStyle = 'rgba(80,200,80,0.28)';
+      ctx.beginPath();
+      ctx.moveTo(lerp(mNL, mBL, startT), lerp(VP.y, trackBaseY, startT));
+      ctx.lineTo(lerp(mNR, mBR, startT), lerp(VP.y, trackBaseY, startT));
+      ctx.lineTo(mBR, trackBaseY); ctx.lineTo(mBL, trackBaseY);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // === FENCES ===
+    ctx.strokeStyle = '#8B4513'; ctx.lineCap = 'round';
+    // Draw 2 rails per side per lane
+    const drawFenceRail = (nEdge, bEdge, tVal) => {
+      const x1 = lerp(nEdge, bEdge, tVal * 0.3);
+      const y1 = lerp(VP.y, trackBaseY, tVal * 0.3);
+      const x2 = lerp(nEdge, bEdge, 0.95);
+      const y2 = lerp(VP.y, trackBaseY, 0.95);
+      ctx.lineWidth = lerp(1, 3, tVal * 0.5 + 0.1);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    };
+    drawFenceRail(wNL, wBL, 0.3); drawFenceRail(wNL, wBL, 0.65);
+    drawFenceRail(wNR, wBR, 0.3); drawFenceRail(wNR, wBR, 0.65);
+    drawFenceRail(mNL, mBL, 0.3); drawFenceRail(mNL, mBL, 0.65);
+    drawFenceRail(mNR, mBR, 0.3); drawFenceRail(mNR, mBR, 0.65);
+    // Fence posts (verticals at each step)
+    ctx.strokeStyle = '#6b3010';
+    for (let i = 0; i <= RACE_TOTAL; i++) {
+      const t4 = i / RACE_TOTAL;
+      const postT = 1 - t4;
+      const py = lerp(VP.y, trackBaseY, postT);
+      const ph = lerp(4, 16, postT);
+      const postH = lerp(VP.y, trackBaseY, postT * 0.95);
+      ctx.lineWidth = lerp(0.5, 2, postT);
+      // Warrior left fence post
+      const wpx = lerp(wNL, wBL, postT);
+      ctx.beginPath(); ctx.moveTo(wpx, py - ph*0.3); ctx.lineTo(wpx, py + ph*0.7); ctx.stroke();
+      // Warrior right fence post
+      const wprx = lerp(wNR, wBR, postT);
+      ctx.beginPath(); ctx.moveTo(wprx, py - ph*0.3); ctx.lineTo(wprx, py + ph*0.7); ctx.stroke();
+      // Monster left fence post
+      const mpx = lerp(mNL, mBL, postT);
+      ctx.beginPath(); ctx.moveTo(mpx, py - ph*0.3); ctx.lineTo(mpx, py + ph*0.7); ctx.stroke();
+      // Monster right fence post
+      const mprx = lerp(mNR, mBR, postT);
+      ctx.beginPath(); ctx.moveTo(mprx, py - ph*0.3); ctx.lineTo(mprx, py + ph*0.7); ctx.stroke();
+    }
+
+    // === SEGMENT MARKERS & NUMBERS ===
+    for (let i = 0; i <= RACE_TOTAL; i++) {
+      const t5 = i / RACE_TOTAL;
+      const postT = 1 - t5;
+      const py = lerp(VP.y, trackBaseY, postT);
+      // Divider line across both lanes
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = lerp(0.5, 1.5, postT);
+      const leftX = lerp(wNL, wBL, postT);
+      const rightX = lerp(mNR, mBR, postT);
+      ctx.beginPath(); ctx.moveTo(leftX, py); ctx.lineTo(rightX, py); ctx.stroke();
+      // Number label (at warrior lane right edge)
+      if (i < RACE_TOTAL) {
+        const numX = lerp(wNR, wBR, postT) + lerp(2, 8, postT);
+        const numY = py;
+        const fontSize = Math.round(lerp(6, 13, postT));
+        ctx.font = `bold ${fontSize}px Nunito,sans-serif`;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.textAlign = 'left';
+        ctx.fillText(i === 0 ? '终' : i, numX + 1, numY + 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fillText(i === 0 ? '终' : i, numX, numY);
       }
     }
-    // Finish flag pole
-    ctx.strokeStyle = '#444'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(trackRight-3, lane1Y-4); ctx.lineTo(trackRight-3, lane2Y+laneH+4); ctx.stroke();
-    // flag emoji above
-    ctx.font = `${Math.max(16,H*0.1)}px serif`;
+
+    // === CHECKERED FINISH LINE ===
+    const finishT = 0.03;
+    const finTY = lerp(VP.y, trackBaseY, finishT);
+    const finBY = lerp(VP.y, trackBaseY, finishT + 0.07);
+    const finLeft = lerp(wNL, wBL, finishT);
+    const finRight = lerp(mNR, mBR, finishT);
+    const finW = finRight - finLeft;
+    const finH = finBY - finTY;
+    const cols = 6, rows = 3;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        ctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)';
+        ctx.fillRect(finLeft + (c / cols) * finW, finTY + (r / rows) * finH, finW / cols, finH / rows);
+      }
+    }
+    // Flag pole
+    ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(VP.x, VP.y - H*0.06); ctx.lineTo(VP.x, finBY); ctx.stroke();
+    // Flag emoji
+    ctx.font = `${Math.max(14, H*0.06)}px serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('🏁', trackRight, lane1Y - 6);
+    ctx.fillText('🏁', VP.x, VP.y - H*0.06);
 
-    // Progress fills
-    const p1w = (this.playerStep / RACE_TOTAL) * trackW;
-    const p2w = (this.monsterStep / RACE_TOTAL) * trackW;
-    if (p1w > 0) {
-      ctx.fillStyle = 'rgba(255,200,0,0.35)';
-      ctx.fillRect(trackLeft, lane1Y+2, p1w, laneH-4);
-    }
-    if (p2w > 0) {
-      ctx.fillStyle = 'rgba(140,60,230,0.25)';
-      ctx.fillRect(trackLeft, lane2Y+2, p2w, laneH-4);
-    }
-
-    // Step number labels
-    ctx.font = `bold ${Math.max(8,H*0.045)}px Nunito,sans-serif`;
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.textAlign = 'center';
-    for (let i = 0; i <= RACE_TOTAL; i++) {
-      const x = trackLeft + (trackW / RACE_TOTAL) * i;
-      ctx.fillText(i === 0 ? '起' : i === RACE_TOTAL ? '' : i, x, lane2Y + laneH + 12);
-    }
-
-    // === DRAW CHARACTERS ===
-    const charScale = laneH * 0.9;
-    // Warrior position in lane1
-    const warriorX = trackLeft + (this.playerStep / RACE_TOTAL) * trackW;
-    const warriorY = lane1Y + laneH * 0.5;
-    this._drawRaceWarrior(ctx, warriorX, warriorY, charScale);
-
-    // Monster position in lane2
-    const monsterX = trackLeft + (this.monsterStep / RACE_TOTAL) * trackW;
-    const monsterY = lane2Y + laneH * 0.5;
-    this._drawRaceMonster(ctx, monsterX, monsterY, charScale);
+    // === CHARACTERS ===
+    const drawChar = (step, nL, nR, bL, bR, drawFn) => {
+      const t6 = step / RACE_TOTAL;
+      const depthT = 1 - t6; // 0=far(small) 1=near(large)
+      const charX = lerp((nL + nR) / 2, (bL + bR) / 2, depthT);
+      const charY = lerp(VP.y, trackBaseY, depthT);
+      const laneWidthAtDepth = lerp(nR - nL, bR - bL, depthT);
+      const charSize = Math.max(14, laneWidthAtDepth * 0.60);
+      drawFn.call(this, ctx, charX, charY - charSize * 0.42, charSize);
+    };
+    drawChar(this.playerStep, wNL, wNR, wBL, wBR, this._drawRaceWarrior);
+    drawChar(this.monsterStep, mNL, mNR, mBL, mBR, this._drawRaceMonster);
   }
 
   _drawRaceWarrior(ctx, cx, cy, size) {
@@ -2974,79 +3125,108 @@ class RaceGame {
   }
 
   _drawRaceMonster(ctx, cx, cy, size) {
-    // Compact running monster — based on pk-section SVG monster (green cartoon creature)
+    // Green bird-raptor (running pose with spread wings)
     const s = size / 110;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(s, s);
-    ctx.translate(-40, -58);
+    ctx.translate(-40, -55);
 
-    // Tail
-    ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    // === WINGS (spread — running pose) ===
+    // Left wing (swept back)
+    ctx.fillStyle = '#27ae60';
     ctx.beginPath();
-    ctx.moveTo(55,90); ctx.quadraticCurveTo(76,86, 78,70); ctx.quadraticCurveTo(80,57, 70,55);
-    ctx.stroke();
-    // Body
-    ctx.fillStyle = '#2ecc71';
-    ctx.beginPath(); ctx.ellipse(40,78, 28,30, 0, 0, Math.PI*2); ctx.fill();
-    // Underbelly
-    ctx.fillStyle = '#a9dfbf';
-    ctx.beginPath(); ctx.ellipse(40,82, 16,18, 0, 0, Math.PI*2); ctx.fill();
-    // Arms
-    ctx.fillStyle = '#2ecc71';
-    ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(13,70); ctx.quadraticCurveTo(4,65, 7,80); ctx.quadraticCurveTo(9,89, 18,86); ctx.lineTo(20,72); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(67,70); ctx.quadraticCurveTo(76,65, 73,80); ctx.quadraticCurveTo(71,89, 62,86); ctx.lineTo(60,72); ctx.closePath(); ctx.fill(); ctx.stroke();
-    // Claws
-    ctx.strokeStyle = '#1a7a4a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    [[8,80],[9,82],[11,84]].forEach(([x,y]) => { ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-4, y+5); ctx.stroke(); });
-    [[72,80],[71,82],[69,84]].forEach(([x,y]) => { ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+4, y+5); ctx.stroke(); });
-    // Head
-    ctx.fillStyle = '#2ecc71';
-    ctx.beginPath(); ctx.ellipse(40,40, 26,24, 0, 0, Math.PI*2); ctx.fill();
-    // Horns
-    ctx.fillStyle = '#e74c3c';
-    ctx.beginPath(); ctx.moveTo(24,22); ctx.quadraticCurveTo(18,5, 22,2); ctx.quadraticCurveTo(26,8, 28,18); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(56,22); ctx.quadraticCurveTo(62,5, 58,2); ctx.quadraticCurveTo(54,8, 52,18); ctx.closePath(); ctx.fill();
-    // Eyes
-    ctx.fillStyle = '#f39c12';
-    ctx.beginPath(); ctx.arc(31,38, 9, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(49,38, 9, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#1a1a2e';
-    ctx.beginPath(); ctx.arc(31,38, 5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(49,38, 5, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.beginPath(); ctx.arc(33,36, 2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(51,36, 2, 0, Math.PI*2); ctx.fill();
-    // Brows
-    ctx.strokeStyle = '#1a5c2a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(23,30); ctx.quadraticCurveTo(31,26, 38,30); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(42,30); ctx.quadraticCurveTo(49,26, 57,30); ctx.stroke();
-    // Nose
+    ctx.moveTo(20, 68); ctx.quadraticCurveTo(-8, 50, -2, 32);
+    ctx.quadraticCurveTo(8, 24, 24, 46); ctx.quadraticCurveTo(22, 60, 20, 68);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#1e8449'; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(18, 64); ctx.quadraticCurveTo(0, 46, 4, 33); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(18, 57); ctx.quadraticCurveTo(6, 48, 10, 36); ctx.stroke();
+    // Right wing (forward — running)
     ctx.fillStyle = '#27ae60';
-    ctx.beginPath(); ctx.ellipse(40,46, 5,3, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#1a5c2a';
-    ctx.beginPath(); ctx.arc(37.5,46, 1.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(42.5,46, 1.5, 0, Math.PI*2); ctx.fill();
-    // Mouth
-    ctx.fillStyle = '#1a1a2e';
-    ctx.beginPath(); ctx.moveTo(25,54); ctx.quadraticCurveTo(40,64, 55,54); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#c0392b';
-    ctx.beginPath(); ctx.moveTo(25,54); ctx.quadraticCurveTo(40,58, 55,54); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'white';
-    [[29,54,5,7],[36,54,5,8],[43,54,5,8],[50,54,5,7]].forEach(([x,y,w,h]) => {
-      ctx.beginPath(); ctx.roundRect(x,y,w,h,1); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(60, 68); ctx.quadraticCurveTo(88, 50, 82, 32);
+    ctx.quadraticCurveTo(72, 24, 56, 46); ctx.quadraticCurveTo(58, 60, 60, 68);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#1e8449'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(62, 64); ctx.quadraticCurveTo(80, 46, 76, 33); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(62, 57); ctx.quadraticCurveTo(74, 48, 70, 36); ctx.stroke();
+
+    // === BODY ===
+    ctx.fillStyle = '#2ecc71';
+    ctx.beginPath(); ctx.ellipse(40, 76, 22, 27, 0, 0, Math.PI*2); ctx.fill();
+    // Lighter belly
+    ctx.fillStyle = '#a8f0c6';
+    ctx.beginPath(); ctx.ellipse(40, 80, 12, 17, 0, 0, Math.PI*2); ctx.fill();
+
+    // === HEAD ===
+    ctx.fillStyle = '#2ecc71';
+    ctx.beginPath(); ctx.ellipse(40, 34, 20, 21, 0, 0, Math.PI*2); ctx.fill();
+    // Head crest (3 feather spikes)
+    ctx.fillStyle = '#1a8a4a';
+    [[34,19,30,5],[40,17,40,3],[46,19,50,5]].forEach(([bx,by,tx,ty]) => {
+      ctx.beginPath();
+      ctx.moveTo(bx-4, by); ctx.lineTo(tx, ty); ctx.lineTo(bx+4, by);
+      ctx.closePath(); ctx.fill();
     });
-    // Feet
+
+    // === EYES ===
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.ellipse(32, 32, 8, 9, -0.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(48, 32, 8, 9, 0.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#f39c12';
+    ctx.beginPath(); ctx.arc(32, 33, 5.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(48, 33, 5.5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath(); ctx.arc(33, 33, 3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(49, 33, 3, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(34, 31, 1.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(50, 31, 1.5, 0, Math.PI*2); ctx.fill();
+    // Brows (determined look)
+    ctx.strokeStyle = '#1a5c2a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(24, 24); ctx.quadraticCurveTo(32, 21, 38, 24); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(42, 24); ctx.quadraticCurveTo(48, 21, 56, 24); ctx.stroke();
+
+    // === BEAK ===
+    ctx.fillStyle = '#f0a020';
+    ctx.beginPath();
+    ctx.moveTo(34, 42); ctx.quadraticCurveTo(40, 46, 46, 42);
+    ctx.quadraticCurveTo(40, 52, 34, 42); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#c07810'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(34, 42); ctx.quadraticCurveTo(40, 46, 46, 42); ctx.stroke();
+
+    // === RUNNING LEGS ===
     ctx.fillStyle = '#27ae60';
-    ctx.beginPath(); ctx.ellipse(30,106, 10,7, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(50,106, 10,7, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#1e8449'; ctx.lineWidth = 1.5;
+    // Left leg (forward stride)
+    ctx.beginPath(); ctx.roundRect(29, 97, 9, 17, 3); ctx.fill(); ctx.stroke();
+    // Right leg (back stride — offset)
+    ctx.beginPath(); ctx.roundRect(42, 101, 9, 14, 3); ctx.fill(); ctx.stroke();
+
+    // Clawed feet (orange)
+    ctx.fillStyle = '#f0a020';
+    // Left foot
+    ctx.beginPath(); ctx.moveTo(27,114); ctx.lineTo(21,120); ctx.lineTo(25,114); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(30,114); ctx.lineTo(28,121); ctx.lineTo(34,114); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(35,114); ctx.lineTo(38,120); ctx.lineTo(40,114); ctx.closePath(); ctx.fill();
+    // Right foot
+    ctx.beginPath(); ctx.moveTo(42,115); ctx.lineTo(40,121); ctx.lineTo(45,115); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(46,115); ctx.lineTo(48,121); ctx.lineTo(52,115); ctx.closePath(); ctx.fill();
 
     ctx.restore();
   }
 
   _bindEvents() {
-    window.addEventListener('resize', () => { this._resizeCanvas(); this._clearCanvas(); });
+    window.addEventListener('resize', () => {
+      this._resizeCanvas(); this._clearCanvas();
+      const rc = document.getElementById('race-canvas');
+      const wrap = document.getElementById('race-canvas-wrap');
+      if (rc && wrap && wrap.clientWidth > 0 && wrap.clientHeight > 0) {
+        rc.width = wrap.clientWidth; rc.height = wrap.clientHeight;
+        this._drawRaceScene();
+      }
+    });
     const c = this.canvas;
     const pos = e => {
       const r = c.getBoundingClientRect();

@@ -1533,9 +1533,16 @@ function runIntroSequence(level, mode = 'visual') {
     introEl.style.backdropFilter = 'blur(8px)';
     introEl.style.display = 'flex';
 
-    // After 2s hide intro, go straight into game
-    setTimeout(() => {
+    // After 2s hide intro, show READY then GO with voice
+    setTimeout(async () => {
       introEl.style.display = 'none';
+      playReadySound();
+      await showReadyGo('READY', '#FFD700', bgStyle);
+      await new Promise(r => setTimeout(r, 150));
+      playGoSound();
+      await showReadyGo('GO!', '#22c55e', bgStyle);
+      await new Promise(r => setTimeout(r, 100));
+      document.getElementById('readygo-overlay').style.display = 'none';
       resolve();
     }, 2000);
   });

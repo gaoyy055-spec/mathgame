@@ -936,25 +936,63 @@ body {
 <div id="readygo-overlay" style="
   position:fixed; inset:0; z-index:600;
   display:none; align-items:center; justify-content:center;
-  backdrop-filter:blur(8px);
+  backdrop-filter:blur(10px);
   pointer-events:none;
+  flex-direction:column; gap:0;
 ">
+  <!-- decorative stars -->
+  <div id="readygo-stars" style="
+    position:absolute; inset:0; pointer-events:none; overflow:hidden;
+  ">
+    <span class="rg-star" style="left:8%;top:12%;font-size:2.2rem;animation-delay:0s">⭐</span>
+    <span class="rg-star" style="left:88%;top:10%;font-size:1.8rem;animation-delay:0.15s">✨</span>
+    <span class="rg-star" style="left:5%;top:72%;font-size:1.6rem;animation-delay:0.3s">🌟</span>
+    <span class="rg-star" style="left:90%;top:75%;font-size:2rem;animation-delay:0.1s">⭐</span>
+    <span class="rg-star" style="left:50%;top:6%;font-size:1.5rem;animation-delay:0.25s">✨</span>
+    <span class="rg-star" style="left:20%;top:85%;font-size:1.4rem;animation-delay:0.4s">🌟</span>
+    <span class="rg-star" style="left:75%;top:88%;font-size:1.6rem;animation-delay:0.2s">⭐</span>
+  </div>
   <div id="readygo-text" style="
-    font-size:clamp(280px,60vw,520px); font-weight:900;
-    color:white; letter-spacing:4px;
-    text-shadow:0 4px 0 rgba(0,0,0,0.25), 0 0 40px rgba(255,200,0,0.6);
-    animation:readygo-pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    font-size:clamp(96px,22vw,220px); font-weight:900;
+    color:white; letter-spacing:6px;
+    font-family:'Nunito',system-ui,sans-serif;
+    text-shadow:
+      0 6px 0 rgba(0,0,0,0.22),
+      0 0 60px rgba(255,220,0,0.7),
+      0 0 120px rgba(255,150,0,0.35);
+    animation:readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    line-height:1;
+    -webkit-text-stroke: 3px rgba(0,0,0,0.12);
+  "></div>
+  <div id="readygo-sub" style="
+    font-size:clamp(22px,5vw,42px); font-weight:800;
+    color:rgba(255,255,255,0.92); letter-spacing:3px;
+    font-family:'Nunito',system-ui,sans-serif;
+    text-shadow:0 2px 8px rgba(0,0,0,0.3);
+    margin-top:12px;
+    opacity:0;
+    transition:opacity 0.2s;
   "></div>
 </div>
 
 <style>
 @keyframes readygo-pop {
-  from { transform:scale(0.3) rotate(-10deg); opacity:0; }
-  to   { transform:scale(1) rotate(0deg); opacity:1; }
+  from { transform:scale(0.2) rotate(-15deg); opacity:0; filter:blur(8px); }
+  to   { transform:scale(1) rotate(0deg); opacity:1; filter:blur(0); }
 }
 @keyframes readygo-fade-out {
   from { opacity:1; transform:scale(1); }
-  to   { opacity:0; transform:scale(1.15); }
+  to   { opacity:0; transform:scale(1.2); filter:blur(4px); }
+}
+@keyframes rg-star-float {
+  0%   { transform:translateY(0) scale(1) rotate(0deg); opacity:0.9; }
+  50%  { transform:translateY(-18px) scale(1.2) rotate(20deg); opacity:1; }
+  100% { transform:translateY(0) scale(1) rotate(0deg); opacity:0.9; }
+}
+.rg-star {
+  position:absolute;
+  animation:rg-star-float 1.6s ease-in-out infinite;
+  filter:drop-shadow(0 2px 6px rgba(255,220,0,0.6));
 }
 </style>
 
@@ -1361,6 +1399,7 @@ function playGoSound() {
 function showReadyGo(text, color, bgStyle) {
   const overlay = document.getElementById('readygo-overlay');
   const el = document.getElementById('readygo-text');
+  const sub = document.getElementById('readygo-sub');
   if (bgStyle) {
     overlay.style.background = bgStyle;
   }
@@ -1372,19 +1411,31 @@ function showReadyGo(text, color, bgStyle) {
   el.style.textShadow = '';
   el.style.color = color;
   el.textContent = text;
+
+  // Sub-text per word
+  const subMap = { 'READY': '准备好了吗？', 'GO!': '冲鸭！加油！' };
+  if (sub) {
+    sub.textContent = subMap[text] || '';
+    sub.style.color = color;
+    sub.style.opacity = '0';
+  }
+
   overlay.style.display = 'flex';
 
   return new Promise(resolve => {
-    // Fade out current text, then swap and pop in new text
     const doShow = () => {
       el.style.animation = 'none';
       void el.offsetWidth;
-      el.style.animation = 'readygo-pop 0.35s cubic-bezier(0.34,1.56,0.64,1)';
-      setTimeout(resolve, 700);
+      el.style.animation = 'readygo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+      // Fade in sub-text slightly after
+      if (sub) {
+        setTimeout(() => { sub.style.opacity = '1'; }, 200);
+      }
+      setTimeout(resolve, 800);
     };
 
     if (el.textContent && el.style.opacity !== '0') {
-      // Animate out previous text first, then show new
+      if (sub) sub.style.opacity = '0';
       el.style.animation = 'readygo-fade-out 0.18s ease-in forwards';
       setTimeout(doShow, 180);
     } else {

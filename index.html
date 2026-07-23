@@ -916,21 +916,86 @@ body {
 <div id="intro-overlay" style="
   position:fixed; inset:0; z-index:600;
   display:flex; align-items:center; justify-content:center;
-  backdrop-filter:blur(8px);
+  backdrop-filter:blur(10px);
+  flex-direction:column;
 ">
+  <!-- floating deco -->
+  <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden">
+    <span class="intro-deco" style="left:5%;top:8%;font-size:2.4rem;animation-delay:0s">🌟</span>
+    <span class="intro-deco" style="left:87%;top:6%;font-size:2rem;animation-delay:0.5s">✨</span>
+    <span class="intro-deco" style="left:8%;top:80%;font-size:1.8rem;animation-delay:1s">🎈</span>
+    <span class="intro-deco" style="left:84%;top:82%;font-size:2rem;animation-delay:0.3s">🎉</span>
+    <span class="intro-deco" style="left:46%;top:4%;font-size:1.6rem;animation-delay:0.7s">⭐</span>
+    <span class="intro-deco" style="left:2%;top:46%;font-size:1.5rem;animation-delay:0.9s">🌈</span>
+    <span class="intro-deco" style="left:91%;top:44%;font-size:1.7rem;animation-delay:0.4s">🎀</span>
+  </div>
+
   <div id="intro-box" style="
-    background:white; border-radius:32px;
+    background:white; border-radius:36px;
     padding:36px 40px 32px; text-align:center;
-    border:4px solid #FFB74D;
-    box-shadow:0 12px 0 #FFB74D, 0 16px 48px rgba(255,100,0,0.3);
-    max-width:360px; width:88%;
+    box-shadow:0 16px 0 rgba(0,0,0,0.10), 0 20px 60px rgba(0,0,0,0.18);
+    max-width:380px; width:88%;
     animation:overlay-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    position:relative; overflow:hidden;
   ">
-    <div id="intro-icon" style="font-size:60px;margin-bottom:10px;"></div>
-    <div id="intro-title" style="font-size:22px;font-weight:900;color:#E65100;margin-bottom:12px;"></div>
-    <div id="intro-rule" style="font-size:16px;font-weight:700;color:#5D4037;line-height:1.7;margin-bottom:8px;"></div>
+    <!-- rainbow top bar -->
+    <div style="
+      position:absolute;top:0;left:0;right:0;height:8px;
+      background:linear-gradient(90deg,#FF6B6B,#FFD93D,#6BCB77,#4D96FF,#c084fc);
+    "></div>
+
+    <div id="intro-icon" style="
+      font-size:68px; margin-bottom:8px; margin-top:4px;
+      animation:intro-icon-pop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+      display:block; line-height:1;
+    "></div>
+
+    <div id="intro-title" style="
+      font-size:clamp(18px,4.5vw,24px); font-weight:900;
+      font-family:'Nunito',system-ui,sans-serif;
+      background:linear-gradient(90deg,#FF6B6B,#FFD93D 40%,#4D96FF);
+      -webkit-background-clip:text; background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-bottom:16px; letter-spacing:1px;
+    "></div>
+
+    <!-- rule box -->
+    <div style="
+      background:linear-gradient(135deg,#fff9e6,#fef3ff);
+      border-radius:20px; padding:16px 20px;
+      border:2px dashed #FFD93D;
+    ">
+      <div id="intro-rule" style="
+        font-size:clamp(15px,3.5vw,18px); font-weight:700;
+        color:#5D4037; line-height:1.85;
+        font-family:'Nunito',system-ui,sans-serif;
+      "></div>
+    </div>
+
+    <!-- countdown hint -->
+    <div style="
+      margin-top:16px; font-size:13px; font-weight:700;
+      color:#bbb; letter-spacing:1px;
+      font-family:'Nunito',system-ui,sans-serif;
+    ">即将开始 · · ·</div>
   </div>
 </div>
+
+<style>
+@keyframes intro-icon-pop {
+  from { transform:scale(0) rotate(-20deg); opacity:0; }
+  to   { transform:scale(1) rotate(0deg); opacity:1; }
+}
+.intro-deco {
+  position:absolute;
+  animation:intro-float 2.4s ease-in-out infinite;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+@keyframes intro-float {
+  0%,100% { transform:translateY(0) rotate(0deg); }
+  50%      { transform:translateY(-16px) rotate(14deg); }
+}
+</style>
 
 <!-- ===== READY / GO OVERLAY ===== -->
 <div id="readygo-overlay" style="

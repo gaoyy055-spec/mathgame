@@ -1395,35 +1395,31 @@ function showReadyGo(text, color, bgStyle) {
   const overlay = document.getElementById('readygo-overlay');
   const el = document.getElementById('readygo-text');
   const card = document.getElementById('readygo-card');
-  if (bgStyle) {
-    overlay.style.background = 'rgba(0,0,0,0.45)';
-  }
-  // Reset styles
-  el.style.fontSize = '';
-  el.style.fontFamily = '';
-  el.style.fontWeight = '';
-  el.style.letterSpacing = '';
-  el.style.textShadow = '';
-  el.style.color = '';
-  el.style.background = '';
-  el.style.webkitBackgroundClip = '';
-  el.style.webkitTextFillColor = '';
+  overlay.style.background = 'rgba(0,0,0,0.45)';
 
+  // Set text first, then apply styles
+  el.removeAttribute('style');
   el.textContent = text;
+  el.style.fontFamily = "'Nunito',system-ui,sans-serif";
+  el.style.fontSize = 'clamp(120px,28vw,280px)';
+  el.style.fontWeight = '900';
+  el.style.letterSpacing = '8px';
+  el.style.lineHeight = '1';
+  el.style.display = 'block';
 
   // Colorful gradient per word
   if (text === 'READY') {
     el.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FFD93D 40%, #6BCB77 70%, #4D96FF 100%)';
     el.style.webkitBackgroundClip = 'text';
-    el.style.webkitTextFillColor = 'transparent';
     el.style.backgroundClip = 'text';
-    card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(255,107,107,0.3)';
+    el.style.webkitTextFillColor = 'transparent';
+    if (card) card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(255,107,107,0.3)';
   } else {
-    el.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+    el.style.background = 'linear-gradient(135deg, #22c55e 0%, #06d6a0 100%)';
     el.style.webkitBackgroundClip = 'text';
-    el.style.webkitTextFillColor = 'transparent';
     el.style.backgroundClip = 'text';
-    card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(34,197,94,0.35)';
+    el.style.webkitTextFillColor = 'transparent';
+    if (card) card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.3), 0 0 0 6px rgba(34,197,94,0.35)';
   }
 
   overlay.style.display = 'flex';
@@ -2006,9 +2002,7 @@ window.addEventListener('load', async () => {
     await recognizer.waitReady();
     clearInterval(dotTimer);
     overlay.style.display = 'none';
-    // Reset font size so READY/GO use their own sizing
-    textEl.style.fontSize = '';
-    textEl.style.color = '';
+    textEl.removeAttribute('style');
   }
 
   runIntroSequence(level, mode).then(async () => {

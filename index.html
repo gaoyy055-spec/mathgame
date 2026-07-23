@@ -88,7 +88,7 @@ body {
 /* ===== SECTION 1: PK ===== */
 #pk-section {
   flex: 0 0 20%;
-  display: flex; align-items: center; justify-content: space-between;
+  display: none; align-items: center; justify-content: space-between;
   padding: 4px 14px;
   background: linear-gradient(135deg, #F9C784 0%, #F5A857 40%, #EF9A4E 100%);
   border-bottom: 4px solid #D4844A;
@@ -203,7 +203,7 @@ body {
 /* ===== SECTION 2: QUESTION ===== */
 #question-section {
   flex: 0 0 13%;
-  display: flex; flex-direction: column;
+  display: none; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 2px;
   background: #FFF8E1;
@@ -1656,6 +1656,8 @@ class Game {
 
     this.canvas = document.getElementById('drawing-canvas');
     this.ctx = this.canvas.getContext('2d');
+    document.getElementById('pk-section').style.display = 'flex';
+    document.getElementById('question-section').style.display = 'flex';
     this._resizeCanvas();
     this._buildDots();
     this._bindEvents();

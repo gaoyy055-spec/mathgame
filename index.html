@@ -993,6 +993,87 @@ body {
 
 
 
+
+
+<!-- ===== LOADING OVERLAY ===== -->
+<div id="loading-overlay" style="
+  position:fixed; inset:0; z-index:700;
+  display:none; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#fff9e6 0%,#ffecd2 50%,#fcf0ff 100%);
+  flex-direction:column; gap:0;
+">
+  <!-- floating deco -->
+  <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden">
+    <span class="ld-bubble" style="left:6%;top:10%;font-size:2.4rem;animation-delay:0s">🌟</span>
+    <span class="ld-bubble" style="left:85%;top:8%;font-size:2rem;animation-delay:0.4s">✨</span>
+    <span class="ld-bubble" style="left:15%;top:78%;font-size:1.8rem;animation-delay:0.8s">🎈</span>
+    <span class="ld-bubble" style="left:80%;top:80%;font-size:2.2rem;animation-delay:0.2s">🎉</span>
+    <span class="ld-bubble" style="left:48%;top:5%;font-size:1.6rem;animation-delay:0.6s">⭐</span>
+    <span class="ld-bubble" style="left:3%;top:45%;font-size:1.5rem;animation-delay:1s">🌈</span>
+    <span class="ld-bubble" style="left:90%;top:45%;font-size:1.7rem;animation-delay:0.3s">🎀</span>
+  </div>
+
+  <!-- card -->
+  <div style="
+    background:white; border-radius:32px;
+    padding:48px 56px 40px;
+    box-shadow:0 12px 48px rgba(0,0,0,0.12);
+    display:flex; flex-direction:column; align-items:center; gap:24px;
+    min-width:280px;
+  ">
+    <!-- robot icon -->
+    <div style="font-size:72px;line-height:1;animation:ld-bounce 1s ease-in-out infinite alternate">🤖</div>
+
+    <!-- title -->
+    <div style="
+      font-size:clamp(22px,5vw,32px); font-weight:900;
+      font-family:'Nunito',system-ui,sans-serif;
+      background:linear-gradient(90deg,#FF6B6B,#FFD93D,#6BCB77,#4D96FF);
+      -webkit-background-clip:text; background-clip:text;
+      -webkit-text-fill-color:transparent;
+      letter-spacing:3px;
+    ">识别引擎准备中</div>
+
+    <!-- progress bar -->
+    <div style="width:100%;background:#f0f0f0;border-radius:99px;height:14px;overflow:hidden">
+      <div id="ld-bar" style="
+        height:100%; width:15%; border-radius:99px;
+        background:linear-gradient(90deg,#FF6B6B,#FFD93D,#6BCB77,#4D96FF);
+        background-size:200% 100%;
+        animation:ld-bar-move 1.2s linear infinite;
+      "></div>
+    </div>
+
+    <!-- dots text -->
+    <div id="ld-dots" style="
+      font-size:16px; font-weight:700; color:#aaa;
+      font-family:'Nunito',system-ui,sans-serif;
+      letter-spacing:2px;
+    ">加载中 ···</div>
+  </div>
+</div>
+
+<style>
+@keyframes ld-bounce {
+  from { transform:translateY(0) scale(1); }
+  to   { transform:translateY(-10px) scale(1.08); }
+}
+@keyframes ld-bar-move {
+  0%   { background-position:200% 0; width:15%; margin-left:0; }
+  50%  { width:40%; }
+  100% { background-position:0% 0; width:15%; margin-left:85%; }
+}
+@keyframes ld-float {
+  0%,100% { transform:translateY(0) rotate(0deg); }
+  50%      { transform:translateY(-14px) rotate(12deg); }
+}
+.ld-bubble {
+  position:absolute;
+  animation:ld-float 2.4s ease-in-out infinite;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+</style>
+
 <!-- ===== EXIT BUTTON ===== -->
 <button id="exit-btn">&#8249;</button>
 <div id="debug-end-btns" style="
@@ -1968,32 +2049,17 @@ window.addEventListener('load', async () => {
 
   // In visual mode, show loading screen until OCR is ready
   if (mode !== 'audio' && !recognizer.ready) {
-    const overlay = document.getElementById('readygo-overlay');
-    const textEl  = document.getElementById('readygo-text');
-    const card    = document.getElementById('readygo-card');
-    overlay.style.display = 'flex';
-    // Reset gradient styles from READY/GO
-    textEl.style.background = '';
-    textEl.style.webkitBackgroundClip = '';
-    textEl.style.webkitTextFillColor = '';
-    textEl.style.backgroundClip = '';
-    textEl.style.color = '#555';
-    textEl.style.fontSize = 'clamp(22px,5vw,38px)';
-    textEl.style.fontFamily = "'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif";
-    textEl.style.fontWeight = '900';
-    textEl.style.letterSpacing = '4px';
-    textEl.style.textShadow = 'none';
-    if (card) card.style.boxShadow = '0 16px 60px rgba(0,0,0,0.15)';
+    const loadingEl = document.getElementById('loading-overlay');
+    const dotsEl    = document.getElementById('ld-dots');
+    loadingEl.style.display = 'flex';
     let dots = 0;
     const dotTimer = setInterval(() => {
       dots = (dots + 1) % 4;
-      textEl.textContent = '识别引擎加载中' + '．'.repeat(dots);
-    }, 600);
-    textEl.textContent = '识别引擎加载中';
+      if (dotsEl) dotsEl.textContent = '加载中 ' + '·'.repeat(dots + 1);
+    }, 500);
     await recognizer.waitReady();
     clearInterval(dotTimer);
-    overlay.style.display = 'none';
-    textEl.removeAttribute('style');
+    loadingEl.style.display = 'none';
   }
 
   runIntroSequence(level, mode).then(async () => {

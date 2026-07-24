@@ -2457,19 +2457,27 @@ class SpaceGame {
       if (v > 0 && v !== correct) pool.add(v);
     }
     const values = [...pool].sort(() => Math.random() - 0.5);
-    // 4 doors evenly spaced, positioned in mid-right area of canvas
-    const doorW = Math.min(W * 0.14, 90);
-    const doorH = Math.min(H * 0.45, 200);
-    const spacing = (W * 0.58) / 5;
-    const startX = W * 0.40 + spacing;
-    const doorY = H * 0.5 - doorH * 0.5;
+    // 4 choice tiles centered horizontally, in the lower portion of the screen
+    const tileW = Math.min(W * 0.18, 110);
+    const tileH = Math.min(tileW * 1.1, 88);
+    const gap = Math.min(W * 0.04, 18);
+    const totalW = tileW * 4 + gap * 3;
+    const startX = (W - totalW) / 2;
+    const tileY = H * 0.72;
+    const colors = [
+      { bg: ['#ff6b6b','#ee5a5a'], glow: '#ff6b6b', text: '#fff' },
+      { bg: ['#ffa94d','#ff9130'], glow: '#ffa94d', text: '#fff' },
+      { bg: ['#51cf66','#3cba56'], glow: '#51cf66', text: '#fff' },
+      { bg: ['#339af0','#228be6'], glow: '#339af0', text: '#fff' },
+    ];
     this.choices = values.map((v, i) => ({
       value: v,
-      x: startX + i * spacing - doorW / 2,
-      y: doorY,
-      w: doorW,
-      h: doorH,
-      hit: false,  // wrong-answer flash
+      x: startX + i * (tileW + gap),
+      y: tileY,
+      w: tileW,
+      h: tileH,
+      hit: false,
+      color: colors[i],
     }));
   }
 
@@ -2538,7 +2546,8 @@ class SpaceGame {
       this.done++;
       this._updateHeader();
       this.targetShipX = this.done / SPACE_TOTAL;
-      this._emitParticles(this.canvas.width * (this.done / SPACE_TOTAL), this.canvas.height * 0.5, '#7fffff');
+      const trackY = this.canvas.height * 0.30;
+      this._emitParticles(this.canvas.width * (0.05 + this.done / SPACE_TOTAL * 0.82), trackY, '#7fffff');
       this._showFeedback('✓ 正确！飞船前进！🚀', 'correct');
       showAnswerMark('space-answer-mark', 'correct', 900);
       playCorrectSound();
@@ -2639,8 +2648,24 @@ class SpaceGame {
 
     // Smooth ship X
     this.shipX += (this.targetShipX - this.shipX) * 0.06;
-    const shipCanvasX = W * 0.05 + this.shipX * W * 0.60;
-    const shipY = H * 0.5;
+    // Ship flies in upper 55% of canvas
+    const trackY = H * 0.30;
+    const shipCanvasX = W * 0.05 + this.shipX * W * 0.82;
+    const shipY = trackY;
+
+    // Flight path track line
+    const trackStartX = W * 0.04;
+    const trackEndX   = W * 0.96;
+    ctx.save();
+    ctx.setLineDash([8, 10]);
+    ctx.strokeStyle = 'rgba(100,200,255,0.22)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(trackStartX, trackY); ctx.lineTo(trackEndX, trackY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Black hole at track end
+    this._drawBlackHole(ctx, trackEndX, trackY, Math.min(W, H) * 0.085);
 
     // Engine exhaust trail
     this._drawExhaust(ctx, shipCanvasX, shipY, W, H);
@@ -2791,64 +2816,93 @@ class SpaceGame {
     ctx.restore();
   }
 
+  _drawBlackHole(ctx, cx, cy, r) {
+    // Outer glow rings
+    for (let i = 4; i >= 1; i--) {
+      const g = ctx.createRadialGradient(cx, cy, r * i * 0.18, cx, cy, r * i * 0.55);
+      g.addColorStop(0, `rgba(140,50,255,${0.12 / i})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx, cy, r * i * 0.55, 0, Math.PI * 2); ctx.fill();
+    }
+    // Accretion disk arc
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1, 0.32);
+    const diskGrad = ctx.createRadialGradient(0, 0, r * 0.55, 0, 0, r * 1.3);
+    diskGrad.addColorStop(0, 'rgba(255,160,60,0.0)');
+    diskGrad.addColorStop(0.35, 'rgba(255,200,80,0.65)');
+    diskGrad.addColorStop(0.7, 'rgba(200,80,255,0.45)');
+    diskGrad.addColorStop(1, 'rgba(60,20,120,0)');
+    ctx.fillStyle = diskGrad;
+    ctx.beginPath(); ctx.arc(0, 0, r * 1.3, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Dark center
+    const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.56);
+    centerGrad.addColorStop(0, 'rgba(0,0,0,1)');
+    centerGrad.addColorStop(0.7, 'rgba(10,0,20,0.95)');
+    centerGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = centerGrad;
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.56, 0, Math.PI * 2); ctx.fill();
+    // Photon ring
+    ctx.strokeStyle = 'rgba(255,220,100,0.75)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.56, 0, Math.PI * 2); ctx.stroke();
+    // Label
+    ctx.save();
+    ctx.font = `bold ${Math.max(11, r * 0.38)}px Nunito,sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(200,160,255,0.85)';
+    ctx.fillText('终点', cx, cy + r * 0.6);
+    ctx.restore();
+  }
+
   _drawDoors(ctx, W, H) {
     for (const d of this.choices) {
-      const isCorrect = d.value === this.currentAnswer;
       const isHit = d.hit;
+      const c = d.color;
+      const cx = d.x + d.w / 2;
+      const cy = d.y + d.h / 2;
+      const r = Math.min(d.w, d.h) * 0.42;
 
-      // Door frame
-      const grad = ctx.createLinearGradient(d.x, d.y, d.x + d.w, d.y + d.h);
-      if (isHit) {
-        grad.addColorStop(0, '#7f1d1d');
-        grad.addColorStop(1, '#991b1b');
-      } else {
-        grad.addColorStop(0, '#1e3a5f');
-        grad.addColorStop(1, '#0c1a2e');
+      // Outer glow
+      if (!isHit) {
+        ctx.save();
+        ctx.shadowColor = c.glow;
+        ctx.shadowBlur = 18;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = 'transparent'; ctx.fill();
+        ctx.restore();
       }
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.roundRect(d.x, d.y, d.w, d.h, 10);
-      ctx.fill();
 
-      // Border glow
-      ctx.strokeStyle = isHit ? '#ff4444' : 'rgba(100,180,255,0.6)';
-      ctx.lineWidth = isHit ? 3 : 2;
-      ctx.beginPath();
-      ctx.roundRect(d.x, d.y, d.w, d.h, 10);
-      ctx.stroke();
+      // Circle background
+      const bg = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.25, 0, cx, cy, r);
+      if (isHit) {
+        bg.addColorStop(0, '#7f1d1d'); bg.addColorStop(1, '#450a0a');
+      } else {
+        bg.addColorStop(0, c.bg[0]); bg.addColorStop(1, c.bg[1]);
+      }
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = bg; ctx.fill();
 
-      // Inner panel lines (sci-fi look)
-      ctx.strokeStyle = isHit ? 'rgba(255,100,100,0.3)' : 'rgba(100,200,255,0.15)';
-      ctx.lineWidth = 1;
-      const pad = 6;
-      ctx.beginPath();
-      ctx.roundRect(d.x + pad, d.y + pad, d.w - pad * 2, d.h - pad * 2, 6);
-      ctx.stroke();
+      // White ring
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = isHit ? '#ff4444' : 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 3; ctx.stroke();
 
-      // Corner accent dots
-      const corners = [
-        [d.x + pad + 4, d.y + pad + 4],
-        [d.x + d.w - pad - 4, d.y + pad + 4],
-        [d.x + pad + 4, d.y + d.h - pad - 4],
-        [d.x + d.w - pad - 4, d.y + d.h - pad - 4],
-      ];
-      ctx.fillStyle = isHit ? '#ff6666' : 'rgba(100,200,255,0.5)';
-      corners.forEach(([cx, cy]) => {
-        ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
-      });
+      // Inner shine arc
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.82, Math.PI * 1.1, Math.PI * 1.9);
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 5; ctx.stroke();
+      ctx.restore();
 
       // Answer number
-      const fontSize = Math.min(d.w * 0.55, d.h * 0.28, 40);
+      const fontSize = Math.min(r * 1.0, 38);
       ctx.font = `900 ${fontSize}px Nunito,sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = isHit ? '#ff8888' : '#e0f0ff';
-      ctx.fillText(d.value, d.x + d.w / 2, d.y + d.h / 2);
-
-      // Top indicator light
-      ctx.fillStyle = isHit ? '#ff4444' : 'rgba(100,200,255,0.7)';
-      ctx.beginPath();
-      ctx.arc(d.x + d.w / 2, d.y + 14, 5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = isHit ? '#ff8888' : 'white';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4;
+      ctx.fillText(d.value, cx, cy);
+      ctx.shadowBlur = 0;
     }
     ctx.textBaseline = 'alphabetic';
   }

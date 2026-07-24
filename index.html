@@ -246,16 +246,15 @@ body {
   100% { transform: scaleY(1); opacity: 1; }
 }
 .prog-block.lit-p, .prog-block.lit-m { animation: block-pop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
-/* danger mode: monster blocks glow red */
+/* danger mode: monster blocks pulse purple (same color, just glowing) */
 .danger-mode .prog-block.lit-m {
-  background: linear-gradient(135deg, #FF5252, #FF1744);
-  border-color: #B71C1C;
-  box-shadow: 0 0 10px #FF1744;
+  background: linear-gradient(135deg, #CE93D8, #E040FB);
+  border-color: #9C27B0;
   animation: block-danger 0.45s ease-in-out infinite alternate, block-pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
 @keyframes block-danger {
-  from { box-shadow: 0 0 6px #FF1744; }
-  to   { box-shadow: 0 0 16px #FF5252; }
+  from { box-shadow: 0 0 6px #E040FB; }
+  to   { box-shadow: 0 0 18px #E040FB, 0 0 6px #CE93D8; }
 }
 
 /* Monster dot pop when monster scores */

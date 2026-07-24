@@ -2951,29 +2951,49 @@ class RaceGame {
     ctx.moveTo(W*0.5, finishY); ctx.lineTo(W*0.5, startY);
     ctx.stroke(); ctx.setLineDash([]);
 
-    // ── STEP DIVIDERS + NUMBERED MARKERS ─────────────────────────────────
+    // ── STEP DIVIDERS + FLAG MARKERS ────────────────────────────────────
     for (let i = 1; i <= RACE_TOTAL; i++) {
-      const t = i / RACE_TOTAL;  // i=1 → near bottom, i=10 → near top
+      const t = i / RACE_TOTAL;
       const y = lerp(startY, finishY, t);
       const xl = lerp(tL_bot, tL_top, t);
       const xr = lerp(tR_bot, tR_top, t);
-      const fs = Math.max(9, lerp(14, 8, t));   // bigger near bottom
+      const fs = Math.max(8, lerp(12, 7, t));
 
       // Divider line across track
       ctx.strokeStyle = 'rgba(255,255,255,0.40)'; ctx.lineWidth = lerp(1.5, 0.8, t);
       ctx.beginPath(); ctx.moveTo(xl, y); ctx.lineTo(xr, y); ctx.stroke();
 
-      // Number circle: warrior → left of track; monster → right of track
-      const circleR = Math.max(7, lerp(11, 7, t));
-      const cx_num = isWarrior ? xl - circleR - 2 : xr + circleR + 2;
-      ctx.fillStyle = '#F39C12';
-      ctx.beginPath(); ctx.arc(cx_num, y, circleR, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(cx_num, y, circleR, 0, Math.PI*2); ctx.stroke();
-      // Number text
+      // Flag: warrior → left of track; monster → right of track
+      const poleH = Math.max(12, lerp(18, 11, t));
+      const flagW = Math.max(8, lerp(13, 8, t));
+      const flagH = Math.max(6, lerp(9, 6, t));
+      const poleX = isWarrior ? xl - 3 : xr + 3;
+      const poleTopY = y - poleH;
+
+      // Pole
+      ctx.strokeStyle = '#8B5E3C'; ctx.lineWidth = Math.max(1.5, lerp(2, 1.5, t));
+      ctx.beginPath(); ctx.moveTo(poleX, y); ctx.lineTo(poleX, poleTopY); ctx.stroke();
+
+      // Flag triangle (red)
+      ctx.fillStyle = '#E53935';
+      ctx.beginPath();
+      if (isWarrior) {
+        ctx.moveTo(poleX, poleTopY);
+        ctx.lineTo(poleX - flagW, poleTopY + flagH * 0.5);
+        ctx.lineTo(poleX, poleTopY + flagH);
+      } else {
+        ctx.moveTo(poleX, poleTopY);
+        ctx.lineTo(poleX + flagW, poleTopY + flagH * 0.5);
+        ctx.lineTo(poleX, poleTopY + flagH);
+      }
+      ctx.closePath(); ctx.fill();
+
+      // Number on flag
       ctx.font = `bold ${fs}px Nunito,sans-serif`;
       ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(i, cx_num, y);
+      const numX = isWarrior ? poleX - flagW * 0.45 : poleX + flagW * 0.45;
+      const numY = poleTopY + flagH * 0.5;
+      ctx.fillText(i, numX, numY);
     }
     ctx.textBaseline = 'alphabetic';
 
@@ -2995,6 +3015,22 @@ class RaceGame {
     // Rainbow layers (outer → inner: red, orange, yellow, green, blue)
     const rainbowColors = ['#FF2222','#FF8800','#FFD700','#22CC44','#2288FF'];
     const layers = rainbowColors.length;
+
+    // Fill arch interior with background gradient so it blends with sky
+    const archFill = ctx.createLinearGradient(0, 0, 0, finishY);
+    archFill.addColorStop(0,    '#1E78C8');
+    archFill.addColorStop(0.45, '#4EA8E8');
+    archFill.addColorStop(1,    '#B8DEFA');
+    const innerRx0 = archRx * (1 - 1 * 0.28);
+    const innerRy0 = archRy * (1 - 1 * 0.28);
+    ctx.fillStyle = archFill;
+    ctx.beginPath();
+    ctx.ellipse(archCX, archBaseY, innerRx0, innerRy0, 0, Math.PI, 0);
+    ctx.lineTo(archCX + innerRx0, archBaseY);
+    ctx.ellipse(archCX, archBaseY, innerRx0, innerRy0, 0, 0, Math.PI);
+    ctx.closePath();
+    ctx.fill();
+
     for (let li = 0; li < layers; li++) {
       const frac = li / layers;
       const nfrac = (li + 1) / layers;
@@ -3050,6 +3086,21 @@ class RaceGame {
     drawStar(archCX + archRx*0.55, archBaseY - archRy*0.80, Math.max(4, W*0.05));
 
     ctx.restore(); // end sky clip
+
+    // ── FINISH FLAG (small red flag at arch base, on track) ──────────────
+    const ffPoleH = Math.max(18, W * 0.12);
+    const ffFlagW = Math.max(10, W * 0.14);
+    const ffFlagH = Math.max(7, W * 0.09);
+    const ffPoleX = archCX;
+    const ffBaseY = finishY + 4;
+    ctx.strokeStyle = '#8B5E3C'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(ffPoleX, ffBaseY); ctx.lineTo(ffPoleX, ffBaseY + ffPoleH); ctx.stroke();
+    ctx.fillStyle = '#E53935';
+    ctx.beginPath();
+    ctx.moveTo(ffPoleX, ffBaseY + ffPoleH);
+    ctx.lineTo(ffPoleX + ffFlagW, ffBaseY + ffPoleH + ffFlagH * 0.5);
+    ctx.lineTo(ffPoleX, ffBaseY + ffPoleH + ffFlagH);
+    ctx.closePath(); ctx.fill();
 
     // ── CHARACTER ─────────────────────────────────────────────────────────
     const depth = 1 - step / RACE_TOTAL;

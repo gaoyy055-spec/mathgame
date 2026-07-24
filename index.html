@@ -2900,17 +2900,27 @@ class RaceGame {
     const startY  = H;
     const trackH  = startY - finishY;
 
-    // ── SKY BAND (above finishY) — rich gradient + scattered clouds ──────
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, finishY);
-    skyGrad.addColorStop(0, '#1E78C8');
-    skyGrad.addColorStop(0.45, '#4EA8E8');
-    skyGrad.addColorStop(1, '#B8DEFA');
+    // ── FULL BACKGROUND — same gradient as #race-section ─────────────────
+    // Sky portion (0 → finishY)
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+    skyGrad.addColorStop(0,    '#1E78C8');
+    skyGrad.addColorStop(0.15, '#4EA8E8');
+    skyGrad.addColorStop(0.35, '#B8DEFA');
+    skyGrad.addColorStop(0.55, '#d4f0c0');
+    skyGrad.addColorStop(0.70, '#a8d878');
+    skyGrad.addColorStop(1,    '#a8d878');
     ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, W, finishY);
+    ctx.fillRect(0, 0, W, H);
 
-    // ── GROUND under track ────────────────────────────────────────────────
-    const gndGrad = ctx.createLinearGradient(0, finishY, 0, startY);
-    gndGrad.addColorStop(0,'#7EC850'); gndGrad.addColorStop(1,'#4a8c28');
+    // ── GROUND under track (sides of trapezoid) ───────────────────────────
+    // Re-use the same gradient so the ground blends instead of hard green
+    const gndGrad = ctx.createLinearGradient(0, 0, 0, H);
+    gndGrad.addColorStop(0,    '#1E78C8');
+    gndGrad.addColorStop(0.15, '#4EA8E8');
+    gndGrad.addColorStop(0.35, '#B8DEFA');
+    gndGrad.addColorStop(0.55, '#d4f0c0');
+    gndGrad.addColorStop(0.70, '#a8d878');
+    gndGrad.addColorStop(1,    '#a8d878');
     ctx.fillStyle = gndGrad;
     ctx.fillRect(0, finishY, W, trackH);
 

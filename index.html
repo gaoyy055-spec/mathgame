@@ -1688,8 +1688,8 @@ const LEVEL_INTROS = {
 
 // Per-level overlay background styles (simulates blurred game scene)
 const LEVEL_OVERLAY_BG = {
-  // Lv1/2: warm orange PK scene
-  1: 'linear-gradient(135deg, rgba(249,199,132,0.92) 0%, rgba(245,168,87,0.92) 40%, rgba(239,154,78,0.92) 100%)',
+  // Lv1: blue PK scene
+  1: 'linear-gradient(160deg, rgba(179,212,255,0.95) 0%, rgba(128,186,255,0.95) 40%, rgba(77,159,255,0.95) 100%)',
   2: 'linear-gradient(135deg, rgba(249,199,132,0.92) 0%, rgba(245,168,87,0.92) 40%, rgba(239,154,78,0.92) 100%)',
   // Lv3: green racing scene (sky→grass gradient)
   3: 'linear-gradient(180deg, rgba(135,206,235,0.88) 0%, rgba(152,216,200,0.88) 30%, rgba(93,188,93,0.88) 60%, rgba(74,158,74,0.88) 100%)',
@@ -1755,6 +1755,21 @@ function runIntroSequence(level, mode = 'visual') {
     const introEl = document.getElementById('intro-overlay');
     introEl.style.background = bgStyle;
     introEl.style.backdropFilter = 'blur(8px)';
+    // Style intro-box border/shadow to match level theme
+    const introBox = document.getElementById('intro-box');
+    if (level === 1) {
+      introBox.style.border = '4px solid #4D9FFF';
+      introBox.style.boxShadow = '0 12px 0 #1E78C8, 0 16px 48px rgba(30,120,200,0.35)';
+      document.getElementById('intro-title').style.color = '#1565C0';
+    } else if (level === 3) {
+      introBox.style.border = '4px solid #66bb6a';
+      introBox.style.boxShadow = '0 12px 0 #388e3c, 0 16px 48px rgba(56,142,60,0.35)';
+      document.getElementById('intro-title').style.color = '#2e7d32';
+    } else {
+      introBox.style.border = '4px solid #FFB74D';
+      introBox.style.boxShadow = '0 12px 0 #FFB74D, 0 16px 48px rgba(255,100,0,0.3)';
+      document.getElementById('intro-title').style.color = '#E65100';
+    }
     introEl.style.display = 'flex';
 
     // After 2s hide intro, show READY then GO with voice

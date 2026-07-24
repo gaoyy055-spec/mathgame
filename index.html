@@ -2458,12 +2458,12 @@ class SpaceGame {
     }
     const values = [...pool].sort(() => Math.random() - 0.5);
     // 4 doors centered horizontally, lower portion of screen
-    const doorW = Math.min(W * 0.14, 90);
-    const doorH = Math.min(H * 0.30, 160);
-    const gap = Math.min(W * 0.04, 20);
+    const doorW = Math.min(W * 0.18, 115);
+    const doorH = Math.min(H * 0.38, 200);
+    const gap = Math.min(W * 0.06, 28);
     const totalW = doorW * 4 + gap * 3;
     const startX = (W - totalW) / 2;
-    const doorY = H * 0.65;
+    const doorY = H * 0.58;
     this.choices = values.map((v, i) => ({
       value: v,
       x: startX + i * (doorW + gap),

@@ -1176,6 +1176,37 @@ body.danger-active #canvas-wrapper {
   </div>
 </div>
 
+<!-- ===== GENERIC FLOATING VOICE OVERLAY (used in audio mode for all levels) ===== -->
+<div id="float-voice-overlay" style="display:none; position:fixed; z-index:300;
+  bottom:16px; left:50%; transform:translateX(-50%);
+  background:rgba(20,20,40,0.92); border-radius:24px;
+  border:2px solid rgba(100,200,255,0.4);
+  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(0,150,255,0.2);
+  padding:12px 22px 12px; flex-direction:column; align-items:center; gap:6px;
+  min-width:260px; max-width:90vw;">
+  <div id="float-voice-mic-btn" style="
+    width:60px; height:60px; border-radius:50%;
+    background:linear-gradient(135deg,#FF8C42,#FFD700);
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px;
+    box-shadow:0 4px 0 #E65C00, 0 6px 18px rgba(255,100,0,0.35);
+    cursor:pointer; border:3px solid rgba(255,255,255,0.6);
+    transition:transform 0.12s; flex-shrink:0;">🎙️</div>
+  <div id="float-voice-status" style="font-size:13px;font-weight:800;color:#FFD700;height:18px;text-align:center;"></div>
+  <div id="float-voice-heard" style="font-size:22px;font-weight:900;color:#7fffff;
+    min-height:30px; text-align:center;
+    background:rgba(255,255,255,0.08); padding:2px 16px;
+    border-radius:12px; border:2px solid rgba(100,200,255,0.3);
+    min-width:80px;"></div>
+  <div style="display:flex;gap:8px;margin-top:2px;">
+    <button id="float-voice-skip" style="
+      height:30px; padding:0 14px; border:none; border-radius:10px;
+      background:rgba(100,200,255,0.2); color:#7fffff;
+      border:1.5px solid rgba(100,200,255,0.3);
+      font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">⏭️ 跳过</button>
+  </div>
+</div>
+
 <!-- ===== INTRO OVERLAY ===== -->
 <div id="intro-overlay" style="
   position:fixed; inset:0; z-index:600;
@@ -1913,6 +1944,225 @@ class DigitRecognizer {
 }
 
 // ===== GAME =====
+// ===== VOICE MIXIN =====
+// Call _voiceMixinInit() in constructor when mode==='audio'
+// Provides: _setupVoice, _startVoice, _stopVoice, _speakQuestion,
+//           _playTTS, _playBingo, _extractNumber, _processVoiceAnswer,
+//           _startRepeatTimer, _cancelRepeatTimer
+//
+// The host class must implement:
+//   _voiceOnCorrect()  — called when answer is right
+//   _voiceOnWrong(num) — called when answer is wrong
+//   _skipQuestion()    — called for skip command
+//   this.currentAnswer (number)
+//   this.currentQuestion (string, readable for TTS)
+//   this.gameEnded, this.locked
+
+const VoiceMixin = {
+  _voiceMixinInit() {
+    this.recognition = null;
+    this.recognizing = false;
+    this.repeatTimer = null;
+    this._interimFired = false;
+    // Show the floating voice overlay
+    const ov = document.getElementById('float-voice-overlay');
+    if (ov) { ov.style.display = 'flex'; }
+    this._setupVoice();
+    // bind skip button
+    const skipBtn = document.getElementById('float-voice-skip');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', () => {
+        this._playTTS('好的，换下一题！');
+        this._cancelRepeatTimer();
+        this._stopVoice();
+        this._skipQuestion();
+      });
+    }
+    // bind mic button
+    const micBtn = document.getElementById('float-voice-mic-btn');
+    if (micBtn) {
+      micBtn.addEventListener('click', () => {
+        if (this.recognizing) this._stopVoice();
+        else this._startVoice();
+      });
+    }
+  },
+
+  _voiceMixinDestroy() {
+    this._cancelRepeatTimer();
+    this._stopVoice();
+    const ov = document.getElementById('float-voice-overlay');
+    if (ov) ov.style.display = 'none';
+  },
+
+  _setupVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      this._setVoiceStatus('浏览器不支持语音，请用Chrome');
+      const micBtn = document.getElementById('float-voice-mic-btn');
+      if (micBtn) micBtn.style.opacity = '0.4';
+      return;
+    }
+    this.recognition = new SR();
+    this.recognition.lang = 'zh-CN';
+    this.recognition.continuous = false;
+    this.recognition.interimResults = true;
+    this.recognition.maxAlternatives = 3;
+
+    this.recognition.onstart = () => {
+      this.recognizing = true;
+      this._interimFired = false;
+      const mb = document.getElementById('float-voice-mic-btn');
+      if (mb) { mb.style.background = 'linear-gradient(135deg,#43A047,#00E676)'; mb.style.boxShadow='0 4px 0 #2E7D32, 0 6px 20px rgba(0,200,100,0.4)'; }
+      this._setVoiceStatus('正在聆听...');
+      this._setVoiceHeard('');
+    };
+    this.recognition.onend = () => {
+      this.recognizing = false;
+      const mb = document.getElementById('float-voice-mic-btn');
+      if (mb) { mb.style.background = 'linear-gradient(135deg,#FF8C42,#FFD700)'; mb.style.boxShadow='0 4px 0 #E65C00, 0 6px 18px rgba(255,100,0,0.35)'; }
+      this._setVoiceStatus('点击麦克风再次输入');
+      if (!this.gameEnded && !this.locked) {
+        setTimeout(() => {
+          if (!this.gameEnded && !this.locked && !this.recognizing) this._startVoice();
+        }, 300);
+      }
+    };
+    this.recognition.onerror = (e) => {
+      this.recognizing = false;
+      const mb = document.getElementById('float-voice-mic-btn');
+      if (mb) { mb.style.background = 'linear-gradient(135deg,#FF8C42,#FFD700)'; mb.style.boxShadow='0 4px 0 #E65C00, 0 6px 18px rgba(255,100,0,0.35)'; }
+      if (e.error === 'no-speech') {
+        this._setVoiceStatus('没听到，请再说一次');
+        if (!this.gameEnded && !this.locked) setTimeout(() => { if (!this.gameEnded && !this.locked) this._startVoice(); }, 500);
+      } else {
+        this._setVoiceStatus('语音出错，点击麦克风重试');
+      }
+    };
+    this.recognition.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        const transcript = res[0].transcript.trim();
+        this._setVoiceHeard(transcript);
+        if (!this._interimFired) {
+          const texts = [];
+          for (let j = 0; j < res.length; j++) texts.push(res[j].transcript.trim());
+          const num = this._extractNumber(texts);
+          if (num !== null) {
+            this._interimFired = true;
+            this.recognition.stop();
+            this._processVoiceAnswer(res);
+            return;
+          }
+        }
+        if (res.isFinal && !this._interimFired) {
+          this._interimFired = true;
+          this._processVoiceAnswer(res);
+        }
+      }
+    };
+  },
+
+  _processVoiceAnswer(result) {
+    if (this.locked || this.gameEnded) return;
+    const texts = [];
+    for (let i = 0; i < result.length; i++) texts.push(result[i].transcript.trim());
+    const fullText = texts.join(' ');
+
+    const repeatWords = ['重复','再说一遍','再说一次','听不清','再念一遍','什么','再来'];
+    if (repeatWords.some(w => fullText.includes(w))) { this._speakQuestion(); return; }
+
+    const skipWords = ['下一题','跳过','不会','换题','下一个','pass','PASS','算了'];
+    if (skipWords.some(w => fullText.includes(w))) {
+      this._playTTS('好的，换下一题！');
+      this._cancelRepeatTimer();
+      this._stopVoice();
+      this._skipQuestion();
+      return;
+    }
+
+    const num = this._extractNumber(texts);
+    if (num === null) { this._setVoiceStatus('没听到数字，再试试 🎙️'); return; }
+    this._setVoiceHeard('说的是：' + num);
+
+    if (num === this.currentAnswer) {
+      this._cancelRepeatTimer();
+      this._stopVoice();
+      this._playBingo();
+      this._voiceOnCorrect();
+    } else {
+      this._playTTS('不对哦，再想想，继续加油！');
+      this._voiceOnWrong(num);
+    }
+  },
+
+  _extractNumber(texts) {
+    const cnMap = {'零':0,'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,
+                   '十':10,'十一':11,'十二':12,'十三':13,'十四':14,'十五':15,'十六':16,'十七':17,'十八':18,'十九':19,
+                   '二十':20,'二十一':21,'二十二':22,'二十三':23,'二十四':24,'二十五':25,'二十六':26,'二十七':27,'二十八':28,'二十九':29,
+                   '三十':30,'三十一':31,'三十二':32,'三十三':33,'三十四':34,'三十五':35,'三十六':36,
+                   '四十':40,'四十二':42,'四十五':45,'四十八':48,'四十九':49,
+                   '五十':50,'五十四':54,'五十六':56,
+                   '六十':60,'六十三':63,'六十四':64,
+                   '七十':70,'七十二':72,
+                   '八十':80,'八十一':81};
+    for (const t of texts) {
+      const m = t.match(/\d+/g);
+      if (m) { for (const d of m) { const n = parseInt(d); if (!isNaN(n)) return n; } }
+      const keys = Object.keys(cnMap).sort((a,b)=>b.length-a.length);
+      for (const k of keys) { if (t.includes(k)) return cnMap[k]; }
+    }
+    return null;
+  },
+
+  _playBingo() {
+    try {
+      const ctx2 = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, i) => {
+        const osc = ctx2.createOscillator(); const gain = ctx2.createGain();
+        osc.connect(gain); gain.connect(ctx2.destination);
+        osc.frequency.value = freq; osc.type = 'sine';
+        const t = ctx2.currentTime + i * 0.12;
+        gain.gain.setValueAtTime(0.4, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.start(t); osc.stop(t + 0.35);
+      });
+    } catch(e) {}
+    this._playTTS('Bingo！答对了，太棒了！');
+  },
+
+  _playTTS(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'zh-CN'; utter.rate = 1.1;
+    window.speechSynthesis.speak(utter);
+  },
+
+  _speakQuestion() {
+    if (!window.speechSynthesis || !this.currentQuestion) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(this.currentQuestion);
+    utter.lang = 'zh-CN'; utter.rate = 0.95;
+    window.speechSynthesis.speak(utter);
+  },
+
+  _startRepeatTimer() {
+    this._cancelRepeatTimer();
+    this.repeatTimer = setInterval(() => {
+      if (this.gameEnded || this.locked) return;
+      this._speakQuestion();
+    }, 10000);
+  },
+
+  _cancelRepeatTimer() { clearInterval(this.repeatTimer); this.repeatTimer = null; },
+  _startVoice() { if (!this.recognition || this.gameEnded) return; try { this.recognition.start(); } catch(e) {} },
+  _stopVoice() { if (!this.recognition) return; try { this.recognition.stop(); } catch(e) {} },
+  _setVoiceStatus(t) { const el = document.getElementById('float-voice-status'); if (el) el.textContent = t; },
+  _setVoiceHeard(t) { const el = document.getElementById('float-voice-heard'); if (el) el.textContent = t; },
+};
+
 const TOTAL = 10;
 const MONSTER_SPEED = 5000; // ms per question
 const AUTO_SUBMIT_DELAY = 300; // ms after pen lifts
@@ -1934,6 +2184,10 @@ class Game {
     this.hasContent = false;
     this.locked = false; // prevent double-submit
 
+    this.currentQuestion = '';  // TTS text
+    this.recognition = null; this.recognizing = false;
+    this.repeatTimer = null; this._interimFired = false;
+
     this.canvas = document.getElementById('drawing-canvas');
     this.ctx = this.canvas.getContext('2d');
     document.getElementById('pk-section').style.display = 'flex';
@@ -1948,11 +2202,18 @@ class Game {
     document.getElementById('answer-section').style.background = 'linear-gradient(180deg, #E3F0FF 0%, #B3D4FF 60%, #80BAFF 100%)';
     document.getElementById('canvas-wrapper').style.border = '3px solid #4D9FFF';
     document.getElementById('canvas-wrapper').style.boxShadow = '0 8px 0 #4D9FFF, 0 10px 28px rgba(30,120,200,0.18)';
+    if (mode === 'audio') {
+      // In voice mode: hide the drawing canvas, keep question visible
+      document.getElementById('canvas-wrapper').style.display = 'none';
+      const ctrl = document.getElementById('controls');
+      if (ctrl) ctrl.style.display = 'none';
+    }
     this._resizeCanvas();
     this._buildDots();
     this._bindEvents();
     this.nextQuestion();
     this._startMonster();
+    if (this.mode === 'audio') this._voiceMixinInit();
   }
 
   _resizeCanvas() {
@@ -2124,6 +2385,17 @@ class Game {
     this._clearCanvas();
     this._setFeedback('', '');
     this.locked = false;
+    if (this.mode === 'audio') {
+      const opText = op === '×' ? `${a} 乘以 ${b} 等于` : `${a} 除以 ${b} 等于`;
+      this.currentQuestion = opText;
+      setTimeout(() => {
+        if (!this.gameEnded && !this.locked) {
+          this._speakQuestion();
+          this._startRepeatTimer();
+          setTimeout(() => { if (!this.gameEnded && !this.locked) this._startVoice(); }, 1200);
+        }
+      }, 300);
+    }
   }
 
   _setFeedback(msg, type) {
@@ -2131,8 +2403,28 @@ class Game {
     el.textContent = msg; el.className = type;
   }
 
+  // voice callbacks (used by VoiceMixin)
+  _voiceOnCorrect() {
+    this.locked = true;
+    this._setFeedback('✓ 太棒了！答对啦！🎉', 'correct');
+    showAnswerMark('answer-mark', 'correct', 1200);
+    playCorrectSound();
+    this.playerScore++;
+    this._fillDot('p', this.playerScore-1);
+    if (this.playerScore > this.monsterScore) { document.getElementById('warrior-wrap').classList.add('winning'); setDangerBorder(false); }
+    else document.getElementById('warrior-wrap').classList.remove('winning');
+    setTimeout(() => { if (this.playerScore >= TOTAL) { this._endGame(); return; } this.nextQuestion(); }, 1200);
+  }
+
+  _voiceOnWrong(num) {
+    this._setFeedback(`✗ 说的是 ${num}，再试试！💪`, 'wrong');
+    showAnswerMark('answer-mark', 'wrong', 1200);
+    playWrongSound();
+  }
+
   _skipQuestion() {
-    this._cancelAutoSubmit();
+    if (this.mode === 'audio') { this._cancelRepeatTimer(); this._stopVoice(); }
+    else this._cancelAutoSubmit();
     this.nextQuestion();
   }
 
@@ -2197,8 +2489,8 @@ class Game {
   _forceEnd() {
     this.gameEnded = true;
     clearInterval(this.monsterTimer);
-    this._cancelAutoSubmit();
-    // 直接返回主菜单
+    if (this.mode === 'audio') this._voiceMixinDestroy();
+    else this._cancelAutoSubmit();
     window.location.href = 'menu.html';
   }
 
@@ -2388,6 +2680,8 @@ function debugEndGame(win) {
 // ===== LEVEL 4 SPACE GAME =====
 const SPACE_TOTAL = 10;
 
+Object.assign(Game.prototype, VoiceMixin);
+
 class SpaceGame {
   constructor(level = 4, mode = 'visual', recognizer = null) {
     this.level = level;
@@ -2406,6 +2700,10 @@ class SpaceGame {
     this.feedbackTimer = null;
     this.holeAngle = 0;
 
+    this.currentQuestion = '';  // TTS text
+    this.recognition = null; this.recognizing = false;
+    this.repeatTimer = null; this._interimFired = false;
+
     this.canvas = document.getElementById('space-canvas');
     this.ctx = this.canvas.getContext('2d');
 
@@ -2415,6 +2713,7 @@ class SpaceGame {
     this._resize();
     this.nextQuestion();
     this._startLoop();
+    if (this.mode === 'audio') this._voiceMixinInit();
   }
 
   _resize() {
@@ -2454,6 +2753,7 @@ class SpaceGame {
     const ans = Math.ceil(Math.random() * 9);
     const a = b * ans;
     this.currentAnswer = ans;
+    this.currentQuestion = `${a} 除以 ${b} 等于`;
     document.getElementById('space-question-display').textContent = `${a} ÷ ${b} = ?`;
     document.getElementById('space-question-display').style.animation = 'none';
     void document.getElementById('space-question-display').offsetWidth;
@@ -2494,6 +2794,42 @@ class SpaceGame {
     const correct = this._genQuestion();
     this._genChoices(correct);
     this._updateHeader();
+    if (this.mode === 'audio') {
+      setTimeout(() => {
+        if (!this.gameEnded && !this.locked) {
+          this._speakQuestion();
+          this._startRepeatTimer();
+          setTimeout(() => { if (!this.gameEnded && !this.locked) this._startVoice(); }, 1200);
+        }
+      }, 300);
+    }
+  }
+
+  _voiceOnCorrect() {
+    this.done++;
+    this._updateHeader();
+    this.targetShipX = this.done / SPACE_TOTAL;
+    const trackY = this.canvas.height * 0.30;
+    this._emitParticles(this.canvas.width * (0.05 + this.done / SPACE_TOTAL * 0.82), trackY, '#7fffff');
+    this._showFeedback('✓ 正确！飞船前进！🚀', 'correct');
+    showAnswerMark('space-answer-mark', 'correct', 900);
+    playCorrectSound();
+    if (this.done >= SPACE_TOTAL) {
+      setTimeout(() => this._endGame(true), 1200);
+    } else {
+      setTimeout(() => this.nextQuestion(), 900);
+    }
+  }
+
+  _voiceOnWrong(num) {
+    this._showFeedback(`✗ 说的是 ${num}，再想想！`, 'wrong');
+    showAnswerMark('space-answer-mark', 'wrong', 900);
+    playWrongSound();
+  }
+
+  _skipQuestion() {
+    if (this.mode === 'audio') { this._cancelRepeatTimer(); this._stopVoice(); }
+    this.nextQuestion();
   }
 
   _updateHeader() {
@@ -3053,6 +3389,7 @@ class SpaceGame {
   _forceEnd() {
     this.gameEnded = true;
     cancelAnimationFrame(this.rafId);
+    if (this.mode === 'audio') this._voiceMixinDestroy();
     window.location.href = 'menu.html';
   }
 
@@ -3061,6 +3398,7 @@ class SpaceGame {
     this.shipX = 0; this.targetShipX = 0;
     this.locked = false; this.gameEnded = false;
     this.particles = [];
+    this.currentQuestion = '';
     this.holeAngle = 0;
     document.getElementById('overlay').classList.remove('show');
     const oc = document.getElementById('overlay-canvas');
@@ -3102,6 +3440,8 @@ class SpaceGame {
 const RACE_TOTAL = 10; // segments
 const RACE_MONSTER_SPEED = 5000; // ms per step
 
+Object.assign(SpaceGame.prototype, VoiceMixin);
+
 class RaceGame {
   constructor(level = 3, mode = 'visual', recognizer = null) {
     this.level = level;
@@ -3119,6 +3459,10 @@ class RaceGame {
     this.hasContent = false;
     this.locked = false;
 
+    this.currentQuestion = '';
+    this.recognition = null; this.recognizing = false;
+    this.repeatTimer = null; this._interimFired = false;
+
     this.canvas = document.getElementById('drawing-canvas');
     this.ctx = this.canvas.getContext('2d');
     this._resizeCanvas();
@@ -3126,6 +3470,7 @@ class RaceGame {
     this._bindEvents();
     this.nextQuestion();
     this._startMonster();
+    if (this.mode === 'audio') this._voiceMixinInit();
   }
 
   _resizeCanvas() {
@@ -3146,6 +3491,12 @@ class RaceGame {
     ui.appendChild(aSec);
     qSec.style.display = 'flex';
     aSec.style.display = 'flex';
+    if (this.mode === 'audio') {
+      const cw = document.getElementById('canvas-wrapper');
+      if (cw) cw.style.display = 'none';
+      const ctrl = document.getElementById('controls');
+      if (ctrl) ctrl.style.display = 'none';
+    }
 
     // Size the strip canvases (left + right)
     const sizeStrips = () => {
@@ -3927,6 +4278,7 @@ class RaceGame {
     const a = Math.floor(Math.random()*3)+7;
     const b = Math.floor(Math.random()*3)+7;
     this.currentAnswer = a * b;
+    this.currentQuestion = `${a} 乘以 ${b} 等于`;
     const el = document.getElementById('question-display');
     el.textContent = `${a} × ${b} = ?`;
     el.style.animation = 'none';
@@ -3935,6 +4287,36 @@ class RaceGame {
     this._clearCanvas();
     this._setFeedback('', '');
     this.locked = false;
+    if (this.mode === 'audio') {
+      setTimeout(() => {
+        if (!this.gameEnded && !this.locked) {
+          this._speakQuestion();
+          this._startRepeatTimer();
+          setTimeout(() => { if (!this.gameEnded && !this.locked) this._startVoice(); }, 1200);
+        }
+      }, 300);
+    }
+  }
+
+  _voiceOnCorrect() {
+    this.locked = true;
+    this._setFeedback('✓ 太棒了！答对啦！🎉', 'correct');
+    showAnswerMark('answer-mark', 'correct', 700);
+    playCorrectSound();
+    this.playerStep = Math.min(this.playerStep + 1, RACE_TOTAL);
+    this._updateRaceTrack();
+    if (this.playerStep >= this.monsterStep) setDangerBorder(false);
+    if (this.playerStep >= RACE_TOTAL) {
+      setTimeout(() => this._endGame(true), 600);
+      return;
+    }
+    setTimeout(() => this.nextQuestion(), 700);
+  }
+
+  _voiceOnWrong(num) {
+    this._setFeedback(`✗ 说的是 ${num}，原地不动 💪`, 'wrong');
+    showAnswerMark('answer-mark', 'wrong', 900);
+    playWrongSound();
   }
 
   _setFeedback(msg, type) {
@@ -3944,7 +4326,8 @@ class RaceGame {
   }
 
   _skipQuestion() {
-    this._cancelAutoSubmit();
+    if (this.mode === 'audio') { this._cancelRepeatTimer(); this._stopVoice(); }
+    else this._cancelAutoSubmit();
     this.nextQuestion();
   }
 
@@ -3962,10 +4345,8 @@ class RaceGame {
       playCorrectSound();
       this.playerStep = Math.min(this.playerStep + 1, RACE_TOTAL);
       this._updateRaceTrack();
-      // If player caught up or leads, clear danger border
       if (this.playerStep >= this.monsterStep) setDangerBorder(false);
       if (this.playerStep >= RACE_TOTAL) {
-        // 玩家先到终点 → 无论怪兽是否到，玩家胜利
         setTimeout(() => this._endGame(true), 600);
         return;
       }
@@ -3998,7 +4379,8 @@ class RaceGame {
   _forceEnd() {
     this.gameEnded = true;
     clearInterval(this.monsterTimer);
-    this._cancelAutoSubmit();
+    if (this.mode === 'audio') this._voiceMixinDestroy();
+    else this._cancelAutoSubmit();
     document.getElementById('race-section').classList.remove('active');
     document.getElementById('race-section').style.display = 'none';
     window.location.href = 'menu.html';
@@ -4095,6 +4477,8 @@ class RaceGame {
 }
 
 // ===== LEVEL 2 VOICE GAME =====
+Object.assign(RaceGame.prototype, VoiceMixin);
+
 class VoiceGame {
   constructor(level = 2, recognizer = null) {
     this.level = level;
@@ -4644,12 +5028,16 @@ class BattleGame {
     this.monsterShakeEnd = 0;
     this.frameCount = 0;
     this.embers = [];
+    this.currentQuestion = '';
+    this.recognition = null; this.recognizing = false;
+    this.repeatTimer = null; this._interimFired = false;
 
     this._initUI();
     this._bindEvents();
     this.nextQuestion();
     this._startCountdown();
     this._runArena();
+    if (this.mode === 'audio') this._voiceMixinInit();
   }
 
   _initUI() {
@@ -4659,6 +5047,12 @@ class BattleGame {
     document.getElementById('question-section').style.display = 'none';
     document.getElementById('answer-section').style.display = 'none';
     // exit-btn z-index already set to 400 in CSS (above battle-scene z-index 5)
+    if (this.mode === 'audio') {
+      const bw = document.getElementById('battle-canvas-wrapper');
+      if (bw) bw.style.display = 'none';
+      const bc = document.getElementById('battle-controls');
+      if (bc) bc.style.display = 'none';
+    }
 
     // Size arena canvas (use requestAnimationFrame to wait for layout)
     const arena = document.getElementById('battle-arena');
@@ -4787,6 +5181,7 @@ class BattleGame {
     else { b=Math.floor(Math.random()*3)+7; answer=Math.ceil(Math.random()*9); a=b*answer; op='÷'; }
 
     this.currentAnswer = answer;
+    this.currentQuestion = op === '×' ? `${a} 乘以 ${b} 等于` : `${a} 除以 ${b} 等于`;
     const el = document.getElementById('battle-question-display');
     el.textContent = `${a} ${op} ${b} = ?`;
     el.style.animation = 'none';
@@ -4795,6 +5190,38 @@ class BattleGame {
     this._clearCanvas();
     this._setFeedback('', '');
     this.locked = false;
+    if (this.mode === 'audio') {
+      setTimeout(() => {
+        if (!this.gameEnded && !this.locked) {
+          this._speakQuestion();
+          this._startRepeatTimer();
+          setTimeout(() => { if (!this.gameEnded && !this.locked) this._startVoice(); }, 1200);
+        }
+      }, 300);
+    }
+  }
+
+  _voiceOnCorrect() {
+    this.locked = true;
+    this._setFeedback('✓ 太棒了！答对啦！🎉', 'correct');
+    showAnswerMark('battle-answer-mark', 'correct', 700);
+    playCorrectSound();
+    this.playerScore++;
+    this.monsterHP--;
+    this._updateHPBar();
+    document.getElementById('battle-score-num').textContent = `${this.playerScore}/${BATTLE_TOTAL}`;
+    this._fireLaser();
+    setTimeout(() => {
+      if (this.playerScore >= BATTLE_TOTAL) { this._endGame(true); return; }
+      this.nextQuestion();
+    }, 700);
+  }
+
+  _voiceOnWrong(num) {
+    this._setFeedback(`✗ 说的是 ${num}，答错啦！再试试 💪`, 'wrong');
+    showAnswerMark('battle-answer-mark', 'wrong', 900);
+    playWrongSound();
+    this._monsterFireBreath();
   }
 
   _setFeedback(msg, type) {
@@ -5724,6 +6151,7 @@ class BattleGame {
     this.flames = [];
     this.frameCount = 0;
     this.embers = [];
+    this.currentQuestion = '';
 
     document.getElementById('battle-countdown').textContent = BATTLE_TIME;
     document.getElementById('battle-countdown').classList.remove('danger');
@@ -5740,6 +6168,7 @@ class BattleGame {
     this._runArena();
   }
 }
+Object.assign(BattleGame.prototype, VoiceMixin);
 </script>
 </body>
 </html>

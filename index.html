@@ -472,22 +472,36 @@ body.danger-active #canvas-wrapper {
   flex: 0.7;
 }
 
-/* ===== LEVEL 1 AUDIO MODE SCRATCH AREA ===== */
-#lv1-scratch-wrapper {
-  flex: 1; width: 100%; max-width: 640px;
-  height: clamp(100px, 28vh, 220px);
-  background: white;
-  border-radius: 28px;
-  border: 3px solid #4D9FFF;
-  box-shadow: 0 8px 0 #4D9FFF, 0 10px 28px rgba(30,120,200,0.18);
-  overflow: hidden; position: relative;
+/* ===== SECTION 3 VOICE MODE (LEVEL 1) ===== */
+#lv1-voice-section {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; padding: 6px 14px 8px;
+  gap: 6px; background: linear-gradient(180deg, #E3F0FF 0%, #B3D4FF 60%, #80BAFF 100%); position: relative; z-index: 1;
 }
-#lv1-scratch-canvas { width:100%; height:100%; display:block; cursor:crosshair; touch-action:none; }
-#lv1-scratch-hint {
+#lv1-voice-scratch-label {
+  font-size: 13px; font-weight: 800; color: #1565C0;
+  display: flex; align-items: center; gap: 6px;
+}
+#lv1-voice-canvas-wrapper {
+  flex: 1; width: 100%; max-width: 640px;
+  background: white;
+  border-radius: 18px;
+  border: 3px dashed #4D9FFF;
+  box-shadow: 0 4px 0 #90CAF9, 0 6px 18px rgba(30,100,200,0.1);
+  overflow: hidden; position: relative;
+  min-height: 80px;
+}
+#lv1-voice-drawing-canvas { width:100%; height:100%; display:block; cursor:crosshair; touch-action:none; }
+#lv1-voice-canvas-hint {
   position: absolute; top:50%; left:50%;
   transform: translate(-50%, -50%);
   font-size: 36px; color: rgba(0,0,0,0.06);
-  font-weight: 900; pointer-events: none; text-align: center;
+  font-weight: 900; pointer-events: none;
+  text-align: center;
+}
+#lv1-voice-controls-row {
+  display: flex; gap: 10px;
+  width: 100%; max-width: 640px;
 }
 
 /* ===== SECTION 3 VOICE MODE (LEVEL 2) ===== */
@@ -1174,17 +1188,18 @@ body.danger-active #canvas-wrapper {
     <button class="ctrl-btn" id="clear-btn">🗑️ 清除</button>
     <button class="ctrl-btn" id="skip-btn">⏭️ 跳过这题</button>
   </div>
-  <!-- Scratch area for Level 1 audio mode -->
-  <div id="lv1-scratch-section" style="display:none; flex-direction:column; align-items:center; gap:6px; width:100%; max-width:640px;">
-    <div id="lv1-scratch-label" style="font-size:13px;font-weight:800;color:#1565C0;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.6);padding:3px 14px;border-radius:99px;">✏️ 草稿区（写写算算）</div>
-    <div id="lv1-scratch-wrapper">
-      <canvas id="lv1-scratch-canvas"></canvas>
-      <div id="lv1-scratch-hint">草稿本，随意涂写</div>
-    </div>
-    <div id="lv1-scratch-controls" style="display:flex;gap:12px;width:100%;max-width:640px;">
-      <button class="ctrl-btn" id="lv1-scratch-clear-btn" style="background:#E3F2FD;color:#1565C0;border:2.5px solid #90CAF9;box-shadow:0 4px 0 #90CAF9;">🗑️ 清除</button>
-      <button class="ctrl-btn" id="lv1-scratch-skip-btn" style="background:#E8F5E9;color:#2E7D32;border:2.5px solid #81C784;box-shadow:0 4px 0 #81C784;flex:0.7;">⏭️ 跳过</button>
-    </div>
+</div>
+
+<!-- ===== SECTION 3 (LEVEL 1 AUDIO MODE): SCRATCH AREA ===== -->
+<div id="lv1-voice-section" style="display:none;">
+  <div id="lv1-voice-scratch-label">✏️ 草稿区（写写算算，不会提交）</div>
+  <div id="lv1-voice-canvas-wrapper">
+    <canvas id="lv1-voice-drawing-canvas"></canvas>
+    <div id="lv1-voice-canvas-hint">草稿本，随意涂写</div>
+  </div>
+  <div id="lv1-voice-controls-row">
+    <button class="ctrl-btn" id="lv1-voice-clear-btn">🗑️ 清空草稿</button>
+    <button class="ctrl-btn" id="lv1-voice-skip-btn">⏭️ 跳过这题</button>
   </div>
 </div>
 
@@ -2233,14 +2248,12 @@ class Game {
       document.getElementById('canvas-wrapper').style.display = 'none';
       const ctrl = document.getElementById('controls');
       if (ctrl) ctrl.style.display = 'none';
-      // Show scratch area for level 1 audio mode
-      const lv1scratch = document.getElementById('lv1-scratch-section');
-      if (lv1scratch) { lv1scratch.style.display = 'flex'; }
-      this._initLv1Scratch();
+      document.getElementById('answer-section').style.display = 'none';
     }
     this._resizeCanvas();
     this._buildDots();
     this._bindEvents();
+    if (this.mode === 'audio') this._initLv1Scratch();
     this.nextQuestion();
     this._startMonster();
     if (this.mode === 'audio') this._voiceMixinInit();
@@ -2252,51 +2265,39 @@ class Game {
     this.canvas.height = wrap.clientHeight || wrap.offsetHeight || 200;
   }
 
+  _resizeScratch() {
+    const wrap = document.getElementById('lv1-voice-canvas-wrapper');
+    if (!wrap) return;
+    this.scratchCanvas.width = wrap.clientWidth || wrap.offsetWidth || 300;
+    this.scratchCanvas.height = wrap.clientHeight || wrap.offsetHeight || 140;
+  }
+
   _initLv1Scratch() {
-    this.scratchCanvas = document.getElementById('lv1-scratch-canvas');
+    document.getElementById('lv1-voice-section').style.display = 'flex';
+    this.scratchCanvas = document.getElementById('lv1-voice-drawing-canvas');
     this.scratchCtx = this.scratchCanvas.getContext('2d');
-    const wrap = document.getElementById('lv1-scratch-wrapper');
-    const resize = () => {
-      this.scratchCanvas.width = wrap.clientWidth || wrap.offsetWidth || 300;
-      this.scratchCanvas.height = wrap.clientHeight || wrap.offsetHeight || 140;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-    const hint = document.getElementById('lv1-scratch-hint');
+    this._resizeScratch();
+    window.addEventListener('resize', () => this._resizeScratch());
+
+    const c = this.scratchCanvas;
+    const hint = document.getElementById('lv1-voice-canvas-hint');
     let drawing = false;
     const pos = e => {
-      const r = this.scratchCanvas.getBoundingClientRect();
+      const r = c.getBoundingClientRect();
       const s = e.touches ? e.touches[0] : e;
-      return { x:(s.clientX-r.left)*(this.scratchCanvas.width/r.width), y:(s.clientY-r.top)*(this.scratchCanvas.height/r.height) };
+      return { x:(s.clientX-r.left)*(c.width/r.width), y:(s.clientY-r.top)*(c.height/r.height) };
     };
-    const onStart = e => {
-      e.preventDefault(); drawing = true;
-      hint.style.opacity = '0';
-      const p = pos(e); this.scratchCtx.beginPath(); this.scratchCtx.moveTo(p.x, p.y);
-    };
-    const onMove = e => {
-      if (!drawing) return; e.preventDefault();
-      const p = pos(e);
-      this.scratchCtx.lineTo(p.x, p.y);
-      this.scratchCtx.strokeStyle = '#1a237e';
-      this.scratchCtx.lineWidth = Math.max(this.scratchCanvas.width / 30, 5);
-      this.scratchCtx.lineJoin = 'round'; this.scratchCtx.lineCap = 'round';
-      this.scratchCtx.stroke(); this.scratchCtx.beginPath(); this.scratchCtx.moveTo(p.x, p.y);
-    };
-    const onEnd = () => { drawing = false; };
-    this.scratchCanvas.addEventListener('mousedown', onStart);
-    this.scratchCanvas.addEventListener('mousemove', onMove);
-    this.scratchCanvas.addEventListener('mouseup', onEnd);
-    this.scratchCanvas.addEventListener('touchstart', onStart, {passive:false});
-    this.scratchCanvas.addEventListener('touchmove', onMove, {passive:false});
-    this.scratchCanvas.addEventListener('touchend', onEnd);
-    document.getElementById('lv1-scratch-clear-btn').addEventListener('click', () => {
-      this.scratchCtx.clearRect(0, 0, this.scratchCanvas.width, this.scratchCanvas.height);
-      hint.style.opacity = '1';
+    c.addEventListener('mousedown', e => { e.preventDefault(); drawing=true; hint.style.opacity='0'; const p=pos(e); this.scratchCtx.beginPath(); this.scratchCtx.moveTo(p.x,p.y); });
+    c.addEventListener('mousemove', e => { if(!drawing) return; e.preventDefault(); const p=pos(e); this.scratchCtx.lineTo(p.x,p.y); this.scratchCtx.strokeStyle='#3E2723'; this.scratchCtx.lineWidth=Math.max(c.width/30,5); this.scratchCtx.lineCap='round'; this.scratchCtx.lineJoin='round'; this.scratchCtx.stroke(); });
+    c.addEventListener('mouseup', () => { drawing=false; });
+    c.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; hint.style.opacity='0'; const p=pos(e); this.scratchCtx.beginPath(); this.scratchCtx.moveTo(p.x,p.y); }, {passive:false});
+    c.addEventListener('touchmove', e => { if(!drawing) return; e.preventDefault(); const p=pos(e); this.scratchCtx.lineTo(p.x,p.y); this.scratchCtx.strokeStyle='#3E2723'; this.scratchCtx.lineWidth=Math.max(c.width/30,5); this.scratchCtx.lineCap='round'; this.scratchCtx.lineJoin='round'; this.scratchCtx.stroke(); }, {passive:false});
+    c.addEventListener('touchend', () => { drawing=false; });
+    document.getElementById('lv1-voice-clear-btn').addEventListener('click', () => {
+      this.scratchCtx.clearRect(0,0,this.scratchCanvas.width,this.scratchCanvas.height);
+      hint.style.opacity='1';
     });
-    document.getElementById('lv1-scratch-skip-btn').addEventListener('click', () => {
-      this._skipQuestion();
-    });
+    document.getElementById('lv1-voice-skip-btn').addEventListener('click', () => this._skipQuestion());
   }
 
   _bindEvents() {

@@ -88,7 +88,7 @@ body {
   display: flex; flex-direction: column;
   align-items: stretch;
   pointer-events: none;
-  overflow: visible;
+  overflow: hidden;
 }
 #race-ui > * { pointer-events: auto; }
 #monster-full-banner {
@@ -105,21 +105,25 @@ body {
   margin-bottom: 4px;
   z-index: 20;
 }
-/* question-section: same as Level 1, height auto to fit question-card + feedback-msg */
+/* question-section: fixed height always includes feedback-msg space */
 #race-ui #question-section {
   display: flex !important;
   flex: 0 0 auto !important;
-  min-height: 13vh !important;
+  min-height: 0 !important;
   height: auto !important;
-  overflow: visible !important;
+  overflow: hidden !important;
 }
-/* answer-section: fixed height so feedback-msg never pushes it down */
+/* feedback-msg always takes up space (visibility toggled, not display) */
+#race-ui #feedback-msg {
+  visibility: visible;
+}
+/* answer-section: fill remaining space */
 #race-ui #answer-section {
   display: flex !important;
-  flex: 0 0 67vh !important;
+  flex: 1 1 0 !important;
   min-height: 0 !important;
-  height: 67vh !important;
-  max-height: 67vh !important;
+  height: auto !important;
+  max-height: none !important;
   overflow: hidden !important;
 }
 #race-ui #canvas-wrapper {
@@ -3403,9 +3407,7 @@ class RaceGame {
   _setFeedback(msg, type) {
     const el = document.getElementById('feedback-msg');
     el.textContent = msg; el.className = type;
-    // When feedback appears, nudge question-section up so text isn't clipped
-    const qs = document.getElementById('question-section');
-    if (qs) qs.style.marginTop = msg ? '-18px' : '';
+    el.style.visibility = msg ? 'visible' : 'hidden';
   }
 
   _skipQuestion() {

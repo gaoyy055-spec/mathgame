@@ -1152,6 +1152,18 @@ body {
       letter-spacing:2px;
     ">加载中 ···</div>
   </div>
+
+  <!-- skip button -->
+  <button id="ld-skip-btn" onclick="window._skipOcrLoading && window._skipOcrLoading()" style="
+    position:fixed; bottom:28px; right:28px;
+    background:linear-gradient(135deg,#FF6B6B,#FFD93D);
+    border:none; border-radius:99px; cursor:pointer;
+    padding:12px 24px;
+    font-size:15px; font-weight:800; color:white;
+    font-family:'Nunito',system-ui,sans-serif;
+    box-shadow:0 4px 16px rgba(255,107,107,0.4);
+    letter-spacing:1px;
+  ">直接进入游戏 →</button>
 </div>
 
 <style>
@@ -2146,7 +2158,10 @@ window.addEventListener('load', async () => {
       dots = (dots + 1) % 4;
       if (dotsEl) dotsEl.textContent = '加载中 ' + '·'.repeat(dots + 1);
     }, 500);
-    await recognizer.waitReady();
+    await Promise.race([
+      recognizer.waitReady(),
+      new Promise(resolve => { window._skipOcrLoading = resolve; })
+    ]);
     clearInterval(dotTimer);
     loadingEl.style.display = 'none';
   }

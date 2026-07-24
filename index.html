@@ -111,12 +111,12 @@ body {
   min-height: 0 !important;
   height: 13vh !important;
 }
-/* answer-section: exactly 67vh (= 100vh - 20vh pk - 13vh question), same as Level 1 */
+/* answer-section: 100vh - 17vh top - 13vh question = 70vh, but capped to remaining space */
 #race-ui #answer-section {
   display: flex !important;
-  flex: 0 0 67vh !important;
+  flex: 1 1 0 !important;
   min-height: 0 !important;
-  height: 67vh !important;
+  height: auto !important;
 }
 #race-ui #canvas-wrapper {
   flex: 1 !important;

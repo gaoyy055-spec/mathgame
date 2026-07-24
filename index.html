@@ -1180,7 +1180,7 @@ body.danger-active #canvas-wrapper {
 <style>
 #float-voice-overlay {
   position: fixed; z-index: 300;
-  bottom: 18px; left: 50%; transform: translateX(-50%);
+  bottom: 8px; left: 50%; transform: translateX(-50%);
   flex-direction: column; align-items: center; gap: 4px;
 }
 #float-voice-mic-btn {
@@ -1202,19 +1202,6 @@ body.danger-active #canvas-wrapper {
   background: linear-gradient(135deg, #9E9E9E, #BDBDBD);
   box-shadow: 0 5px 0 #616161;
 }
-#float-voice-status {
-  font-size: 14px; font-weight: 800; color: #E65100;
-  height: 20px; text-align: center;
-  text-shadow: 0 1px 4px rgba(255,255,255,0.8);
-}
-#float-voice-heard {
-  font-size: 22px; font-weight: 900; color: #1565C0;
-  min-height: 30px; text-align: center;
-  background: rgba(255,255,255,0.85);
-  padding: 2px 16px; border-radius: 12px;
-  border: 2px solid #90CAF9;
-  min-width: 80px;
-}
 #float-voice-skip {
   height: 30px; padding: 0 14px; border: none; border-radius: 10px;
   background: rgba(255,255,255,0.75); color: #E65100;
@@ -1225,8 +1212,6 @@ body.danger-active #canvas-wrapper {
 </style>
 <div id="float-voice-overlay" style="display:none;">
   <div id="float-voice-mic-btn">🎙️</div>
-  <div id="float-voice-status"></div>
-  <div id="float-voice-heard"></div>
   <button id="float-voice-skip">⏭️ 跳过</button>
 </div>
 

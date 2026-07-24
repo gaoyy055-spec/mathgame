@@ -3830,7 +3830,8 @@ class RaceGame {
     this.gameEnded = true;
     clearInterval(this.monsterTimer);
     this._cancelAutoSubmit();
-    this._teardownUI();
+    document.getElementById('race-section').classList.remove('active');
+    document.getElementById('race-section').style.display = 'none';
     window.location.href = 'menu.html';
   }
 

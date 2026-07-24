@@ -1818,6 +1818,13 @@ class Game {
     document.getElementById('question-section').style.display = 'flex';
     document.body.style.paddingTop = '70px';
     document.body.style.background = 'linear-gradient(160deg, #FFF0F5 0%, #FFD6E7 40%, #FFADD2 70%, #FF85C0 100%)';
+    document.getElementById('pk-section').style.background = 'linear-gradient(135deg, #FF85C0 0%, #FF5BA3 40%, #E84393 100%)';
+    document.getElementById('pk-section').style.borderBottom = '4px solid #C2185B';
+    document.getElementById('question-section').style.background = 'linear-gradient(180deg, #FFF0F5 0%, #FFD6E7 100%)';
+    document.getElementById('question-section').style.borderBottom = '3px dashed #FF85C0';
+    document.getElementById('answer-section').style.background = 'linear-gradient(180deg, #FFF0F5 0%, #FFD6E7 60%, #FFADD2 100%)';
+    document.getElementById('canvas-wrapper').style.border = '3px solid #FF85C0';
+    document.getElementById('canvas-wrapper').style.boxShadow = '0 8px 0 #FF85C0, 0 10px 28px rgba(255,100,180,0.18)';
     this._resizeCanvas();
     this._buildDots();
     this._bindEvents();

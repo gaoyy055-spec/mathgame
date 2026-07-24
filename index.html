@@ -129,7 +129,18 @@ body {
 /* Level 3 green theme overrides for question/answer sections */
 #race-ui #question-section {
   background: transparent !important;
-  border-bottom: 3px dashed #66bb6a !important;
+  border-bottom: none !important;
+  padding-bottom: 8px !important;
+}
+#race-ui #question-section::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56%;
+  border-bottom: 3px dashed #66bb6a;
+  pointer-events: none;
 }
 #race-ui #question-card {
   background: rgba(255,255,255,0.85) !important;

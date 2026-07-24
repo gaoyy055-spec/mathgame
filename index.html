@@ -34,7 +34,7 @@ body {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(to bottom, #5B9BD5 0%, #AED6F1 20%);
+  background: linear-gradient(to bottom, #1E78C8 0%, #4EA8E8 25%, #B8DEFA 45%);
 }
 #race-section.active { display: flex; }
 
@@ -2876,23 +2876,6 @@ class RaceGame {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, W, finishY);
 
-    // Scattered white clouds — staggered by strip so they don't overlap
-    const drawCloud = (ccx, ccy, baseR) => {
-      ctx.fillStyle = 'rgba(255,255,255,0.90)';
-      ctx.beginPath(); ctx.arc(ccx, ccy, baseR, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(ccx - baseR*0.62, ccy + baseR*0.28, baseR*0.70, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(ccx + baseR*0.62, ccy + baseR*0.28, baseR*0.70, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(ccx - baseR*1.12, ccy + baseR*0.55, baseR*0.48, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(ccx + baseR*1.12, ccy + baseR*0.55, baseR*0.48, 0, Math.PI*2); ctx.fill();
-    };
-    if (isWarrior) {
-      drawCloud(W*0.28, finishY*0.30, W*0.18); // large, upper-left
-      drawCloud(W*0.80, finishY*0.65, W*0.11); // small, lower-right
-    } else {
-      drawCloud(W*0.20, finishY*0.62, W*0.12); // small, lower-left
-      drawCloud(W*0.72, finishY*0.28, W*0.19); // large, upper-right
-    }
-
     // ── GROUND under track ────────────────────────────────────────────────
     const gndGrad = ctx.createLinearGradient(0, finishY, 0, startY);
     gndGrad.addColorStop(0,'#7EC850'); gndGrad.addColorStop(1,'#4a8c28');
@@ -2938,10 +2921,9 @@ class RaceGame {
       ctx.strokeStyle = 'rgba(255,255,255,0.40)'; ctx.lineWidth = lerp(1.5, 0.8, t);
       ctx.beginPath(); ctx.moveTo(xl, y); ctx.lineTo(xr, y); ctx.stroke();
 
-      // Number circle on LEFT of track
+      // Number circle: warrior → left of track; monster → right of track
       const circleR = Math.max(7, lerp(11, 7, t));
-      const cx_num = xl - circleR - 2;
-      // Circle bg — same orange for both tracks
+      const cx_num = isWarrior ? xl - circleR - 2 : xr + circleR + 2;
       ctx.fillStyle = '#F39C12';
       ctx.beginPath(); ctx.arc(cx_num, y, circleR, 0, Math.PI*2); ctx.fill();
       ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5;
@@ -2953,14 +2935,20 @@ class RaceGame {
     }
     ctx.textBaseline = 'alphabetic';
 
-    // ── FINISH LINE — Rainbow arch gate ──────────────────────────────────
+    // ── FINISH LINE — Rainbow arch gate (sky portion only) ───────────────
     const fw = tR_top - tL_top;
     const archCX = W * 0.5;
-    const archBaseY = finishY + 4;          // arch feet sit on the finish line
-    const archRx = fw * 0.52;               // half-width of arch
-    const archH  = Math.min(finishY * 0.72, archRx * 0.9); // arch height
+    const archBaseY = finishY;                 // arch base at sky/track boundary
+    const archRx = fw * 0.52;
+    const archH  = Math.min(finishY * 0.72, archRx * 0.9);
     const archRy = archH;
-    const archThick = Math.max(6, W * 0.07);// thickness of rainbow band
+    const archThick = Math.max(6, W * 0.07);
+
+    // Clip to sky region only (y < finishY) so arch never overlaps the track
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, W, finishY);
+    ctx.clip();
 
     // Rainbow layers (outer → inner: red, orange, yellow, green, blue)
     const rainbowColors = ['#FF2222','#FF8800','#FFD700','#22CC44','#2288FF'];
@@ -2985,40 +2973,22 @@ class RaceGame {
     ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(archCX, archBaseY, archRx, archRy, 0, Math.PI, 0); ctx.stroke();
 
-    // Left pillar
+    // Left pillar (sky portion only — clipped above)
     const pillarW = archThick * 0.9;
     const pillarH = archH * 0.55;
     const pillarGL = ctx.createLinearGradient(archCX - archRx, archBaseY - pillarH, archCX - archRx + pillarW, archBaseY);
     pillarGL.addColorStop(0,'#FF2222'); pillarGL.addColorStop(1,'#FF8800');
     ctx.fillStyle = pillarGL;
-    ctx.beginPath(); ctx.roundRect(archCX - archRx, archBaseY - pillarH, pillarW, pillarH + 6, 3); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(archCX - archRx, archBaseY - pillarH, pillarW, pillarH, 3); ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.roundRect(archCX - archRx, archBaseY - pillarH, pillarW, pillarH + 6, 3); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(archCX - archRx, archBaseY - pillarH, pillarW, pillarH, 3); ctx.stroke();
 
-    // Right pillar
+    // Right pillar (sky portion only — clipped above)
     const pillarGR = ctx.createLinearGradient(archCX + archRx - pillarW, archBaseY - pillarH, archCX + archRx, archBaseY);
     pillarGR.addColorStop(0,'#2288FF'); pillarGR.addColorStop(1,'#22CC44');
     ctx.fillStyle = pillarGR;
-    ctx.beginPath(); ctx.roundRect(archCX + archRx - pillarW, archBaseY - pillarH, pillarW, pillarH + 6, 3); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(archCX + archRx - pillarW, archBaseY - pillarH, pillarW, pillarH + 6, 3); ctx.stroke();
-
-    // "终点" text inside arch
-    const goalFS = Math.max(10, archH * 0.28);
-    ctx.font = `bold ${goalFS}px Nunito,'PingFang SC',sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'white';
-    ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 4;
-    ctx.fillText('🏁 终点', archCX, archBaseY - archH * 0.52);
-    ctx.shadowBlur = 0;
-
-    // Checkered strip at arch feet
-    const stripeH = 5, cols = 8;
-    for (let c = 0; c < cols; c++) {
-      for (let r = 0; r < 2; r++) {
-        ctx.fillStyle = (r+c)%2===0 ? '#222' : '#FFF';
-        ctx.fillRect(tL_top + (c/cols)*fw, finishY + r*(stripeH/2), fw/cols, stripeH/2);
-      }
-    }
+    ctx.beginPath(); ctx.roundRect(archCX + archRx - pillarW, archBaseY - pillarH, pillarW, pillarH, 3); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(archCX + archRx - pillarW, archBaseY - pillarH, pillarW, pillarH, 3); ctx.stroke();
 
     // Small star decorations on arch top
     const drawStar = (sx, sy, sr) => {
@@ -3036,6 +3006,8 @@ class RaceGame {
     drawStar(archCX, archBaseY - archRy - 4, Math.max(5, W*0.07));
     drawStar(archCX - archRx*0.55, archBaseY - archRy*0.80, Math.max(4, W*0.05));
     drawStar(archCX + archRx*0.55, archBaseY - archRy*0.80, Math.max(4, W*0.05));
+
+    ctx.restore(); // end sky clip
 
     // ── CHARACTER ─────────────────────────────────────────────────────────
     const depth = 1 - step / RACE_TOTAL;

@@ -1188,6 +1188,15 @@ body.danger-active #canvas-wrapper {
     <button class="ctrl-btn" id="clear-btn">🗑️ 清除</button>
     <button class="ctrl-btn" id="skip-btn">⏭️ 跳过这题</button>
   </div>
+  <!-- Scratch area for Level 3 audio mode -->
+  <div id="race-scratch-wrapper" style="display:none; flex:1; width:100%; max-width:640px; background:white; border-radius:28px; border:3px solid #66bb6a; box-shadow:0 6px 0 #66bb6a,0 8px 24px rgba(40,160,40,0.15); overflow:hidden; position:relative; min-height:80px;">
+    <canvas id="race-scratch-canvas"></canvas>
+    <div id="race-scratch-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:52px;color:rgba(0,0,0,0.06);font-weight:900;pointer-events:none;text-align:center;line-height:1.2;">草稿本</div>
+  </div>
+  <div id="race-scratch-controls" style="display:none; gap:12px; width:100%; max-width:640px;">
+    <button class="ctrl-btn" id="race-scratch-clear-btn" style="background:#E8F5E9;color:#2E7D32;border:2.5px solid #81C784;box-shadow:0 4px 0 #81C784;">🗑️ 清空草稿</button>
+    <button class="ctrl-btn" id="race-scratch-skip-btn" style="background:#E3F2FD;color:#1565C0;border:2.5px solid #90CAF9;box-shadow:0 4px 0 #90CAF9;flex:0.7;">⏭️ 跳过这题</button>
+  </div>
 </div>
 
 <!-- ===== SECTION 3 (LEVEL 1 AUDIO MODE): SCRATCH AREA ===== -->
@@ -3573,6 +3582,13 @@ class RaceGame {
       if (cw) cw.style.display = 'none';
       const ctrl = document.getElementById('controls');
       if (ctrl) ctrl.style.display = 'none';
+      const cl = document.getElementById('canvas-label');
+      if (cl) cl.textContent = '✏️ 草稿区（写写算算，不会提交）';
+      const sw = document.getElementById('race-scratch-wrapper');
+      if (sw) sw.style.display = 'block';
+      const sc = document.getElementById('race-scratch-controls');
+      if (sc) sc.style.display = 'flex';
+      this._initRaceScratch();
     }
 
     // Size the strip canvases (left + right)
@@ -3602,6 +3618,35 @@ class RaceGame {
       else requestAnimationFrame(sizeAns);
     };
     requestAnimationFrame(sizeAns);
+  }
+
+  _initRaceScratch() {
+    const c = document.getElementById('race-scratch-canvas');
+    const hint = document.getElementById('race-scratch-hint');
+    const wrap = document.getElementById('race-scratch-wrapper');
+    const resize = () => {
+      c.width = wrap.clientWidth || wrap.offsetWidth || 300;
+      c.height = wrap.clientHeight || wrap.offsetHeight || 140;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    const ctx = c.getContext('2d');
+    let drawing = false;
+    const pos = e => {
+      const r = c.getBoundingClientRect();
+      const s = e.touches ? e.touches[0] : e;
+      return { x:(s.clientX-r.left)*(c.width/r.width), y:(s.clientY-r.top)*(c.height/r.height) };
+    };
+    c.addEventListener('mousedown', e => { e.preventDefault(); drawing=true; hint.style.opacity='0'; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+    c.addEventListener('mousemove', e => { if(!drawing) return; e.preventDefault(); const p=pos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#3E2723'; ctx.lineWidth=Math.max(c.width/30,5); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke(); });
+    c.addEventListener('mouseup', () => { drawing=false; });
+    c.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; hint.style.opacity='0'; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }, {passive:false});
+    c.addEventListener('touchmove', e => { if(!drawing) return; e.preventDefault(); const p=pos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#3E2723'; ctx.lineWidth=Math.max(c.width/30,5); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke(); }, {passive:false});
+    c.addEventListener('touchend', () => { drawing=false; });
+    document.getElementById('race-scratch-clear-btn').addEventListener('click', () => {
+      ctx.clearRect(0,0,c.width,c.height); hint.style.opacity='1';
+    });
+    document.getElementById('race-scratch-skip-btn').addEventListener('click', () => this._skipQuestion());
   }
 
   _teardownUI() {

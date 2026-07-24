@@ -34,7 +34,7 @@ body {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(to bottom, #1E78C8 0%, #4EA8E8 25%, #B8DEFA 45%);
+  background: linear-gradient(to bottom, #1E78C8 0%, #4EA8E8 15%, #B8DEFA 35%, #d4f0c0 55%, #a8d878 70%);
 }
 #race-section.active { display: flex; }
 
@@ -126,9 +126,33 @@ body {
   max-height: none !important;
   overflow: hidden !important;
 }
+/* Level 3 green theme overrides for question/answer sections */
+#race-ui #question-section {
+  background: #e8f5e9 !important;
+  border-bottom: 3px dashed #66bb6a !important;
+}
+#race-ui #question-card {
+  background: white !important;
+  border: 2px solid #66bb6a !important;
+  box-shadow: 0 4px 0 #66bb6a, 0 6px 16px rgba(40,160,40,0.15) !important;
+}
+#race-ui #question-display {
+  color: #2e7d32 !important;
+}
+#race-ui #feedback-msg.wrong { color: #c62828 !important; }
+#race-ui #feedback-msg.correct { color: #2e7d32 !important; }
+#race-ui #answer-section {
+  background: #f1f8e9 !important;
+}
+#race-ui #canvas-label {
+  color: #388e3c !important;
+}
 #race-ui #canvas-wrapper {
   flex: 1 !important;
   height: auto !important;
+  border: 3px solid #66bb6a !important;
+  box-shadow: 0 6px 0 #66bb6a, 0 8px 24px rgba(40,160,40,0.15) !important;
+}
 }
 
 /* ===== SECTION 1: PK ===== */

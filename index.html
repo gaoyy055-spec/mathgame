@@ -81,7 +81,7 @@ body {
 /* Center column: question + answer pinned to exact same position as Level 1 */
 #race-ui {
   position: absolute; z-index: 5;
-  top: 20vh;      /* same as pk-section height */
+  top: 17vh;
   bottom: 0;
   left: 22%;
   right: 22%;
@@ -3014,7 +3014,7 @@ class RaceGame {
     const charT = lerp(0.04, 0.92, depth);
     const charY = lerp(finishY, startY, charT);
     const charX = lerp((tL_top + tR_top)/2, (tL_bot + tR_bot)/2, charT);
-    const charSize = isWarrior ? 190 : 130; // warrior larger, monster smaller
+    const charSize = isWarrior ? 190 : 100; // warrior larger, monster smaller
 
     // Shadow under character
     ctx.save();

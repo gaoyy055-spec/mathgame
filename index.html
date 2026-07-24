@@ -392,7 +392,7 @@ body.danger-active #question-card {
 
 /* ===== SECTION 3: ANSWER ===== */
 #answer-section {
-  flex: 0 0 73%; display: flex; flex-direction: column;
+  flex: 0 0 73%; display: none; flex-direction: column;
   align-items: center; padding: 10px 14px 12px;
   gap: 8px; background: linear-gradient(180deg, #FFF8E1 0%, #FFF3CD 60%, #FFE8A3 100%);
   position: relative; z-index: 1;
@@ -1938,6 +1938,7 @@ class Game {
     this.ctx = this.canvas.getContext('2d');
     document.getElementById('pk-section').style.display = 'flex';
     document.getElementById('question-section').style.display = 'flex';
+    document.getElementById('answer-section').style.display = 'flex';
     document.body.style.paddingTop = '70px';
     document.body.style.background = '#C8E0FF';
     document.getElementById('pk-section').style.background = '#C8E0FF';
@@ -3949,6 +3950,7 @@ class VoiceGame {
     // Level 2: replace monster SVG with Rune Golem
     document.getElementById('pk-section').style.display = 'flex';
     document.getElementById('question-section').style.display = 'flex';
+    document.getElementById('answer-section').style.display = 'flex';
     document.body.style.paddingTop = '70px';
     document.body.style.background = '#FFD9A0';
     document.getElementById('pk-section').style.background = '#FFD9A0';

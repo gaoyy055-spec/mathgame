@@ -3348,106 +3348,136 @@ class RaceGame {
   }
 
   _drawRaceMonster(ctx, cx, cy, size) {
-    // Cute round purple monster — child-friendly design
+    // Blue feathered bird-monster — child-friendly design
     const s = size / 80;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(s, s);
-    ctx.translate(-40, -70); // center of character in 80×80 space
+    ctx.translate(-40, -70);
 
-    // === BODY (big round purple) ===
-    ctx.fillStyle = '#9040C8';
-    ctx.beginPath(); ctx.ellipse(40, 55, 22, 26, 0, 0, Math.PI*2); ctx.fill();
-    // Belly (lighter)
-    ctx.fillStyle = '#C080F0';
-    ctx.beginPath(); ctx.ellipse(40, 58, 13, 16, 0, 0, Math.PI*2); ctx.fill();
-
-    // === ARMS ===
-    // Left arm (waving)
-    ctx.fillStyle = '#9040C8';
-    ctx.beginPath();
-    ctx.moveTo(18, 50); ctx.quadraticCurveTo(4, 44, 8, 34);
-    ctx.quadraticCurveTo(10, 28, 16, 34); ctx.quadraticCurveTo(18, 42, 22, 46);
-    ctx.closePath(); ctx.fill();
-    // Right arm (reaching forward)
-    ctx.beginPath();
-    ctx.moveTo(62, 50); ctx.quadraticCurveTo(76, 44, 72, 34);
-    ctx.quadraticCurveTo(70, 28, 64, 34); ctx.quadraticCurveTo(62, 42, 58, 46);
-    ctx.closePath(); ctx.fill();
-    // Fingers (left)
-    ctx.fillStyle = '#7030A8';
-    [[-4,2],[-1,-2],[3,-3]].forEach(([dx,dy]) => {
-      ctx.beginPath(); ctx.ellipse(8+dx, 33+dy, 3, 2, 0.3, 0, Math.PI*2); ctx.fill();
+    // === TAIL FEATHERS (behind body) ===
+    const featherColors = ['#FF6B35','#FFD700','#FF4499','#7B2FFF','#00C8FF'];
+    const featherAngles = [-0.6, -0.3, 0, 0.3, 0.6];
+    featherAngles.forEach((angle, i) => {
+      ctx.save();
+      ctx.translate(40, 62);
+      ctx.rotate(angle);
+      ctx.fillStyle = featherColors[i % featherColors.length];
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(-6, -20, 0, -30);
+      ctx.quadraticCurveTo(6, -20, 0, 0);
+      ctx.closePath(); ctx.fill();
+      // Feather shine
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(0, -2);
+      ctx.quadraticCurveTo(-2, -14, 0, -22);
+      ctx.quadraticCurveTo(1, -14, 0, -2);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
     });
-    // Fingers (right)
-    [[-3,-3],[1,-2],[4,2]].forEach(([dx,dy]) => {
-      ctx.beginPath(); ctx.ellipse(72+dx, 33+dy, 3, 2, -0.3, 0, Math.PI*2); ctx.fill();
+
+    // === LEGS ===
+    ctx.strokeStyle = '#1565C0'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    // Left leg
+    ctx.beginPath(); ctx.moveTo(30, 76); ctx.lineTo(26, 86); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(30, 76); ctx.lineTo(22, 82); ctx.stroke();
+    // Right leg
+    ctx.beginPath(); ctx.moveTo(50, 76); ctx.lineTo(54, 86); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(50, 76); ctx.lineTo(58, 82); ctx.stroke();
+    // Feet/toes (orange)
+    ctx.fillStyle = '#FF8C00';
+    [[22,82],[26,86],[30,88],[54,86],[58,82],[62,84]].forEach(([tx,ty]) => {
+      ctx.beginPath(); ctx.ellipse(tx, ty, 3.5, 2, 0.3, 0, Math.PI*2); ctx.fill();
+    });
+
+    // === BODY ===
+    ctx.fillStyle = '#2196F3';
+    ctx.beginPath(); ctx.ellipse(40, 58, 20, 22, 0, 0, Math.PI*2); ctx.fill();
+    // Belly (light blue)
+    ctx.fillStyle = '#BBDEFB';
+    ctx.beginPath(); ctx.ellipse(40, 62, 11, 13, 0, 0, Math.PI*2); ctx.fill();
+
+    // === WING FEATHERS (sides) ===
+    // Left wing
+    ctx.fillStyle = '#1565C0';
+    ctx.beginPath();
+    ctx.moveTo(20, 52); ctx.quadraticCurveTo(4, 48, 6, 38);
+    ctx.quadraticCurveTo(8, 30, 16, 36); ctx.quadraticCurveTo(18, 44, 24, 50);
+    ctx.closePath(); ctx.fill();
+    // Left wing feather tips
+    ['#FF6B35','#FFD700','#00C8FF'].forEach((c, i) => {
+      ctx.fillStyle = c;
+      ctx.beginPath();
+      ctx.moveTo(6 + i*2, 38 - i*2);
+      ctx.quadraticCurveTo(3 + i*2, 30 - i*2, 8 + i*2, 26 - i*2);
+      ctx.quadraticCurveTo(12 + i*2, 30 - i*2, 9 + i*2, 36 - i*2);
+      ctx.closePath(); ctx.fill();
+    });
+    // Right wing
+    ctx.fillStyle = '#1565C0';
+    ctx.beginPath();
+    ctx.moveTo(60, 52); ctx.quadraticCurveTo(76, 48, 74, 38);
+    ctx.quadraticCurveTo(72, 30, 64, 36); ctx.quadraticCurveTo(62, 44, 56, 50);
+    ctx.closePath(); ctx.fill();
+    // Right wing feather tips
+    ['#FF6B35','#FFD700','#FF4499'].forEach((c, i) => {
+      ctx.fillStyle = c;
+      ctx.beginPath();
+      ctx.moveTo(74 - i*2, 38 - i*2);
+      ctx.quadraticCurveTo(77 - i*2, 30 - i*2, 72 - i*2, 26 - i*2);
+      ctx.quadraticCurveTo(68 - i*2, 30 - i*2, 71 - i*2, 36 - i*2);
+      ctx.closePath(); ctx.fill();
     });
 
     // === HEAD ===
-    ctx.fillStyle = '#A050D8';
-    ctx.beginPath(); ctx.ellipse(40, 30, 24, 22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1E88E5';
+    ctx.beginPath(); ctx.ellipse(40, 30, 22, 21, 0, 0, Math.PI*2); ctx.fill();
+    // Head sheen
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath(); ctx.ellipse(34, 22, 10, 7, -0.4, 0, Math.PI*2); ctx.fill();
 
-    // === HORNS (cute small ones) ===
-    ctx.fillStyle = '#FF8040';
-    // Left horn
-    ctx.beginPath(); ctx.moveTo(24, 14); ctx.quadraticCurveTo(20, 4, 26, 8); ctx.quadraticCurveTo(30, 11, 28, 16); ctx.closePath(); ctx.fill();
-    // Right horn
-    ctx.beginPath(); ctx.moveTo(56, 14); ctx.quadraticCurveTo(60, 4, 54, 8); ctx.quadraticCurveTo(50, 11, 52, 16); ctx.closePath(); ctx.fill();
-    // Horn shine
-    ctx.fillStyle = 'rgba(255,200,150,0.6)';
-    ctx.beginPath(); ctx.ellipse(25, 10, 2, 1.5, -0.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(55, 10, 2, 1.5, 0.5, 0, Math.PI*2); ctx.fill();
+    // === HEAD FEATHER CREST ===
+    [[-8,-2,'#FF6B35'],[-4,-4,'#FFD700'],[0,-5,'#00C8FF'],[4,-4,'#FF4499'],[8,-2,'#7B2FFF']].forEach(([dx,dy,c]) => {
+      ctx.fillStyle = c;
+      ctx.beginPath();
+      ctx.moveTo(40+dx, 12+dy);
+      ctx.quadraticCurveTo(40+dx-3, 4+dy, 40+dx, dy);
+      ctx.quadraticCurveTo(40+dx+3, 4+dy, 40+dx, 12+dy);
+      ctx.closePath(); ctx.fill();
+    });
 
-    // === EYES (large, cute) ===
-    // Eye whites
+    // === EYES (large cute) ===
     ctx.fillStyle = 'white';
     ctx.beginPath(); ctx.ellipse(31, 27, 9, 10, -0.1, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(49, 27, 9, 10,  0.1, 0, Math.PI*2); ctx.fill();
-    // Iris (red)
-    ctx.fillStyle = '#E82020';
-    ctx.beginPath(); ctx.arc(31, 28, 6, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(49, 28, 6, 0, Math.PI*2); ctx.fill();
+    // Iris (sky blue)
+    ctx.fillStyle = '#00ACC1';
+    ctx.beginPath(); ctx.arc(31, 28, 6.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(49, 28, 6.5, 0, Math.PI*2); ctx.fill();
     // Pupil
-    ctx.fillStyle = '#1a0020';
-    ctx.beginPath(); ctx.arc(32, 28, 3.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(50, 28, 3.5, 0, Math.PI*2); ctx.fill();
-    // Eye shine
+    ctx.fillStyle = '#00283A';
+    ctx.beginPath(); ctx.arc(32, 28.5, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(50, 28.5, 3.5, 0, Math.PI*2); ctx.fill();
+    // Shine
     ctx.fillStyle = 'white';
-    ctx.beginPath(); ctx.arc(33, 26, 1.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(51, 26, 1.5, 0, Math.PI*2); ctx.fill();
-    // Eyelashes (top)
-    ctx.strokeStyle = '#7030A8'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(23, 22); ctx.lineTo(25, 18); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(27, 19); ctx.lineTo(28, 15); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(57, 22); ctx.lineTo(55, 18); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(53, 19); ctx.lineTo(52, 15); ctx.stroke();
+    ctx.beginPath(); ctx.arc(33.5, 26.5, 1.8, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(51.5, 26.5, 1.8, 0, Math.PI*2); ctx.fill();
 
-    // === SMILE (with cute teeth) ===
-    ctx.fillStyle = '#1a0820';
+    // === BEAK ===
+    ctx.fillStyle = '#FF8C00';
     ctx.beginPath();
-    ctx.moveTo(28, 38);
-    ctx.quadraticCurveTo(40, 46, 52, 38);
-    ctx.quadraticCurveTo(40, 48, 28, 38);
+    ctx.moveTo(36, 36); ctx.quadraticCurveTo(40, 42, 44, 36);
+    ctx.quadraticCurveTo(40, 39, 36, 36);
     ctx.closePath(); ctx.fill();
-    // Teeth
-    ctx.fillStyle = 'white';
-    ctx.beginPath(); ctx.roundRect(32, 38, 5, 5, 1); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(40, 38, 5, 5, 1); ctx.fill();
+    // Beak highlight
+    ctx.fillStyle = '#FFB300';
+    ctx.beginPath(); ctx.ellipse(40, 36.5, 3.5, 1.5, 0, 0, Math.PI*2); ctx.fill();
     // Rosy cheeks
     ctx.fillStyle = 'rgba(255,120,180,0.45)';
-    ctx.beginPath(); ctx.ellipse(21, 34, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(59, 34, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
-
-    // === FEET ===
-    ctx.fillStyle = '#7030A8';
-    ctx.beginPath(); ctx.ellipse(30, 80, 8, 5, 0.2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(50, 80, 8, 5, -0.2, 0, Math.PI*2); ctx.fill();
-    // Toes
-    ctx.fillStyle = '#9050C0';
-    [[22,78],[27,77],[32,77],[42,77],[47,77],[52,78]].forEach(([tx,ty]) => {
-      ctx.beginPath(); ctx.arc(tx, ty, 2.5, 0, Math.PI*2); ctx.fill();
-    });
+    ctx.beginPath(); ctx.ellipse(20, 33, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(60, 33, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
 
     ctx.restore();
   }

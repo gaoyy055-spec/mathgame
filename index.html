@@ -73,9 +73,13 @@ body {
   cursor: pointer; user-select: none;
 }
 #race-step-info {
-  font-size: 12px; font-weight: 800; color: #1B5E20;
+  display: flex; gap: 6px; align-items: center;
+}
+.race-prog-box {
+  font-size: 12px; font-weight: 800;
   background: rgba(255,255,255,0.88);
-  padding: 2px 10px; border-radius: 10px;
+  padding: 3px 10px; border-radius: 10px;
+  display: flex; align-items: center; gap: 4px;
 }
 
 /* Center column: question + answer pinned to exact same position as Level 1 */
@@ -925,7 +929,10 @@ body.danger-active #canvas-wrapper {
   <!-- Header bar -->
   <div id="race-header">
     <div id="race-back-btn" onclick="window.location.href='menu.html'" style="background:transparent;border:none;font-size:20px;padding:2px 8px;color:#1B5E20;">‹</div>
-    <div id="race-step-info">🚗 勇士：<span id="race-player-step">0</span>/10 ｜ 怪兽：<span id="race-monster-step">0</span>/10</div>
+    <div id="race-step-info">
+      <div class="race-prog-box" style="color:#1565C0;">⚔️ 勇士 <span id="race-player-step">0</span>/10</div>
+      <div class="race-prog-box" style="color:#6A1B9A;">👾 怪兽 <span id="race-monster-step">0</span>/10</div>
+    </div>
   </div>
   <!-- Center column: question + answer injected here by JS -->
   <div id="race-ui">
@@ -3112,7 +3119,36 @@ class RaceGame {
     }
     ctx.textBaseline = 'alphabetic';
 
-    // ── FINISH LINE — Rainbow arch gate (sky portion only) ───────────────
+    // ── FINISH LINE at track top (finishY) — checkered + red flags ───────
+    const finL = tL_top, finR = tR_top;
+    const finSegW = (finR - finL) / 8;
+    for (let si = 0; si < 8; si++) {
+      ctx.fillStyle = si % 2 === 0 ? 'white' : '#222';
+      ctx.fillRect(finL + si * finSegW, finishY - 4, finSegW, 8);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(finL, finishY); ctx.lineTo(finR, finishY); ctx.stroke();
+    // Red flags on both sides of finish line
+    const flagH = Math.max(18, H * 0.06);
+    [[finL - 2, -1], [finR + 2, 1]].forEach(([fx, dir]) => {
+      // Pole
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(fx, finishY); ctx.lineTo(fx, finishY - flagH); ctx.stroke();
+      // Flag
+      ctx.fillStyle = '#E53935';
+      ctx.beginPath();
+      ctx.moveTo(fx, finishY - flagH);
+      ctx.lineTo(fx + dir * flagH * 0.55, finishY - flagH + flagH * 0.3);
+      ctx.lineTo(fx, finishY - flagH * 0.5);
+      ctx.closePath(); ctx.fill();
+      // Flag shine
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(fx, finishY - flagH);
+      ctx.lineTo(fx + dir * flagH * 0.25, finishY - flagH + flagH * 0.15);
+      ctx.lineTo(fx, finishY - flagH * 0.7);
+      ctx.closePath(); ctx.fill();
+    });
     const fw = tR_top - tL_top;
     const archCX = W * 0.5;
     const archBaseY = finishY;                 // arch base at sky/track boundary
@@ -3324,19 +3360,6 @@ class RaceGame {
     // Body sheen
     ctx.fillStyle = 'rgba(106,156,232,0.4)';
     ctx.beginPath(); ctx.ellipse(26, 42.4, 7, 9, 0, 0, Math.PI*2); ctx.fill();
-
-    // Star on chest
-    ctx.fillStyle = '#FFD700';
-    const sx = 26, sy = 38.4;
-    ctx.beginPath();
-    for (let i = 0; i < 5; i++) {
-      const a = (i * 4 * Math.PI / 5) - Math.PI/2;
-      const bi = ((i*2+1) * 2 * Math.PI / 10) - Math.PI/2;
-      if (i === 0) { ctx.moveTo(sx+Math.cos(a)*3.5, sy+Math.sin(a)*3.5); }
-      else ctx.lineTo(sx+Math.cos(a)*3.5, sy+Math.sin(a)*3.5);
-      ctx.lineTo(sx+Math.cos(bi)*1.5, sy+Math.sin(bi)*1.5);
-    }
-    ctx.closePath(); ctx.fill();
 
     // Shield (left side — red circle with gold cross)
     ctx.fillStyle = '#C83030';

@@ -105,23 +105,13 @@ body {
   margin-bottom: 4px;
   z-index: 20;
 }
-/* question-section: fixed 13vh, never changes size */
+/* question-section: same as Level 1, height auto to fit question-card + feedback-msg */
 #race-ui #question-section {
   display: flex !important;
-  flex: 0 0 13vh !important;
-  min-height: 0 !important;
-  height: 13vh !important;
+  flex: 0 0 auto !important;
+  min-height: 13vh !important;
+  height: auto !important;
   overflow: visible !important;
-}
-/* feedback-msg: outside question-section in race-ui, absolutely positioned */
-#race-ui #feedback-msg {
-  position: absolute !important;
-  top: calc(13vh + 2px) !important;
-  left: 0 !important;
-  right: 0 !important;
-  justify-content: center !important;
-  pointer-events: none !important;
-  z-index: 6 !important;
 }
 /* answer-section: fixed height so feedback-msg never pushes it down */
 #race-ui #answer-section {
@@ -284,15 +274,6 @@ body {
 #feedback-msg {
   font-size: 15px; font-weight: 800; height: 22px;
   display: flex; align-items: center; gap: 4px;
-}
-#race-ui #feedback-msg {
-  position: absolute;
-  top: calc(20vh + 13vh + 2px);
-  left: 22%;
-  right: 22%;
-  justify-content: center;
-  z-index: 6;
-  pointer-events: none;
 }
 #feedback-msg.wrong { color: #E53935; animation: shake 0.4s; }
 #feedback-msg.correct { color: #43A047; }
@@ -1025,8 +1006,8 @@ body {
     <div id="question-display">3 × 4 = ?</div>
     <div id="answer-mark" style="font-size:clamp(48px,9vw,72px);font-weight:900;width:1.2em;text-align:center;transition:opacity 0.25s;opacity:0;text-shadow:0 2px 8px rgba(0,0,0,0.18);line-height:1;"></div>
   </div>
+  <div id="feedback-msg"></div>
 </div>
-<div id="feedback-msg"></div>
 
 <!-- ===== SECTION 3: ANSWER ===== -->
 <div id="answer-section">
@@ -2818,10 +2799,8 @@ class RaceGame {
     const ui = document.getElementById('race-ui');
     const qSec = document.getElementById('question-section');
     const aSec = document.getElementById('answer-section');
-    const fbMsg = document.getElementById('feedback-msg');
     ui.appendChild(qSec);
     ui.appendChild(aSec);
-    if (fbMsg) ui.appendChild(fbMsg);
     qSec.style.display = 'flex';
     aSec.style.display = 'flex';
 
@@ -2855,18 +2834,14 @@ class RaceGame {
   }
 
   _teardownUI() {
-    // Return question/answer/feedback sections to body so other game modes work
+    // Return question/answer sections to body so other game modes work
     const qSec = document.getElementById('question-section');
     const aSec = document.getElementById('answer-section');
-    const fbMsg = document.getElementById('feedback-msg');
     if (qSec && qSec.parentElement && qSec.parentElement.id === 'race-ui') {
       document.body.appendChild(qSec);
     }
     if (aSec && aSec.parentElement && aSec.parentElement.id === 'race-ui') {
       document.body.appendChild(aSec);
-    }
-    if (fbMsg && fbMsg.parentElement && fbMsg.parentElement.id === 'race-ui') {
-      qSec.appendChild(fbMsg);
     }
   }
 

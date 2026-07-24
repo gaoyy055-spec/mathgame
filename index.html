@@ -1801,7 +1801,7 @@ class Game {
     this.ctx = this.canvas.getContext('2d');
     document.getElementById('pk-section').style.display = 'flex';
     document.getElementById('question-section').style.display = 'flex';
-    document.body.style.paddingTop = '40px';
+    document.body.style.paddingTop = '60px';
     this._resizeCanvas();
     this._buildDots();
     this._bindEvents();
@@ -3634,7 +3634,7 @@ class VoiceGame {
     // Level 2: replace monster SVG with Rune Golem
     document.getElementById('pk-section').style.display = 'flex';
     document.getElementById('question-section').style.display = 'flex';
-    document.body.style.paddingTop = '40px';
+    document.body.style.paddingTop = '60px';
     if (this.level === 2) {
       document.getElementById('monster-svg-default').style.display = 'none';
       document.getElementById('monster-svg-lv2').style.display = '';

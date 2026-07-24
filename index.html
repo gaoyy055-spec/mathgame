@@ -105,12 +105,12 @@ body {
   margin-bottom: 4px;
   z-index: 20;
 }
-/* question-section: same as Level 1, height auto to fit question-card + feedback-msg */
+/* question-section: fixed height = 13vh + 22px (feedback line always reserved) */
 #race-ui #question-section {
   display: flex !important;
-  flex: 0 0 auto !important;
-  min-height: 13vh !important;
-  height: auto !important;
+  flex: 0 0 calc(13vh + 24px) !important;
+  min-height: 0 !important;
+  height: calc(13vh + 24px) !important;
   overflow: visible !important;
 }
 /* answer-section: fixed height so feedback-msg never pushes it down */

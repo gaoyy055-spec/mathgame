@@ -2400,9 +2400,11 @@ class SpaceGame {
     this.locked = false;
     this.gameEnded = false;
     this.stars = [];
+    this.bigStars = [];
     this.particles = [];
     this.rafId = null;
     this.feedbackTimer = null;
+    this.holeAngle = 0;
 
     this.canvas = document.getElementById('space-canvas');
     this.ctx = this.canvas.getContext('2d');
@@ -2429,6 +2431,19 @@ class SpaceGame {
         r: Math.random() * 1.8 + 0.3,
         speed: Math.random() * 0.0004 + 0.0001,
         alpha: Math.random() * 0.5 + 0.4,
+      });
+    }
+    // Big glowing star clusters
+    this.bigStars = [];
+    const bigColors = ['#fffbe6','#ffd6e7','#d0f0ff','#e6d6ff','#c8ffd4'];
+    for (let i = 0; i < 6; i++) {
+      this.bigStars.push({
+        x: Math.random(),
+        y: Math.random() * 0.7,
+        r: Math.random() * 3 + 3,
+        color: bigColors[Math.floor(Math.random() * bigColors.length)],
+        twinkle: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.04 + Math.random() * 0.04,
       });
     }
   }
@@ -2601,10 +2616,25 @@ class SpaceGame {
 
     // Background: deep space gradient
     const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, '#000018');
-    bg.addColorStop(1, '#050025');
+    bg.addColorStop(0, '#000022');
+    bg.addColorStop(0.5, '#080030');
+    bg.addColorStop(1, '#0a0035');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
+
+    // Nebula blobs (radial, pink + blue)
+    const nebulas = [
+      { x: 0.15, y: 0.35, r: 0.28, c: 'rgba(180,60,255,0.07)' },
+      { x: 0.75, y: 0.55, r: 0.25, c: 'rgba(60,160,255,0.07)' },
+      { x: 0.45, y: 0.18, r: 0.20, c: 'rgba(255,80,180,0.05)' },
+    ];
+    for (const n of nebulas) {
+      const ng = ctx.createRadialGradient(n.x*W, n.y*H, 0, n.x*W, n.y*H, n.r*Math.min(W,H));
+      ng.addColorStop(0, n.c);
+      ng.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = ng;
+      ctx.beginPath(); ctx.arc(n.x*W, n.y*H, n.r*Math.min(W,H), 0, Math.PI*2); ctx.fill();
+    }
 
     // Stars (scrolling slowly)
     for (const s of this.stars) {
@@ -2618,21 +2648,31 @@ class SpaceGame {
     }
     ctx.globalAlpha = 1;
 
-    // Nebula tint strips
-    ctx.globalAlpha = 0.06;
-    ctx.fillStyle = '#7c3aed';
-    ctx.fillRect(0, H * 0.2, W, H * 0.3);
-    ctx.fillStyle = '#0e7490';
-    ctx.fillRect(0, H * 0.55, W, H * 0.25);
-    ctx.globalAlpha = 1;
+    // Big twinkling stars with halos
+    for (const bs of this.bigStars) {
+      bs.twinkle += bs.twinkleSpeed;
+      const alpha = 0.55 + Math.sin(bs.twinkle) * 0.35;
+      const hg = ctx.createRadialGradient(bs.x*W, bs.y*H, 0, bs.x*W, bs.y*H, bs.r * 5);
+      hg.addColorStop(0, bs.color.replace(')', `,${alpha})`).replace('rgb','rgba'));
+      hg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(bs.x*W, bs.y*H, bs.r*5, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(bs.x*W, bs.y*H, bs.r, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
 
-    // Distant planet (right side, decorative)
+    // Saturn (left side, orange rings)
+    this._drawSaturn(ctx, W * 0.12, H * 0.18, Math.min(W,H) * 0.07);
+
+    // Distant planet (right side, purple)
     const planetR = Math.min(W, H) * 0.10;
     const gp = ctx.createRadialGradient(W * 0.88, H * 0.22, 0, W * 0.88, H * 0.22, planetR);
     gp.addColorStop(0, '#a78bfa');
     gp.addColorStop(0.6, '#6d28d9');
     gp.addColorStop(1, '#1e1b4b');
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 0.55;
     ctx.fillStyle = gp;
     ctx.beginPath();
     ctx.arc(W * 0.88, H * 0.22, planetR, 0, Math.PI * 2);
@@ -2646,18 +2686,29 @@ class SpaceGame {
     const shipCanvasX = W * 0.05 + this.shipX * W * 0.82;
     const shipY = trackY;
 
-    // Flight path track line
+    // Flight path: travelled portion bright, remaining dim
     const trackStartX = W * 0.04;
     const trackEndX   = W * 0.96;
+    const shipPosX = W * 0.05 + this.shipX * W * 0.82;
     ctx.save();
+    // Travelled: bright glow
+    ctx.setLineDash([]);
+    const trailGrad = ctx.createLinearGradient(trackStartX, 0, shipPosX, 0);
+    trailGrad.addColorStop(0, 'rgba(80,200,255,0.15)');
+    trailGrad.addColorStop(1, 'rgba(80,220,255,0.55)');
+    ctx.strokeStyle = trailGrad;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(trackStartX, trackY); ctx.lineTo(shipPosX, trackY); ctx.stroke();
+    // Remaining: dim dashes
     ctx.setLineDash([8, 10]);
-    ctx.strokeStyle = 'rgba(100,200,255,0.22)';
+    ctx.strokeStyle = 'rgba(100,200,255,0.25)';
     ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(trackStartX, trackY); ctx.lineTo(trackEndX, trackY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(shipPosX, trackY); ctx.lineTo(trackEndX, trackY); ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
 
-    // Black hole at track end
+    // Black hole at track end (animated)
+    this.holeAngle += 0.018;
     this._drawBlackHole(ctx, trackEndX, trackY, Math.min(W, H) * 0.085);
 
     // Engine exhaust trail
@@ -2686,30 +2737,42 @@ class SpaceGame {
   }
 
   _drawExhaust(ctx, sx, sy, W, H) {
-    const len = W * 0.06 + Math.random() * W * 0.02;
-    const grad = ctx.createLinearGradient(sx - len, sy, sx, sy);
-    grad.addColorStop(0, 'rgba(100,200,255,0)');
-    grad.addColorStop(0.5, 'rgba(80,180,255,0.35)');
-    grad.addColorStop(1, 'rgba(120,220,255,0.6)');
-    ctx.fillStyle = grad;
     const hw = H * 0.025;
+    const jitter = () => (Math.random() - 0.5) * 3;
+    // Layer 1: wide blue flame
+    const len1 = W * 0.08 + Math.random() * W * 0.03;
+    const g1 = ctx.createLinearGradient(sx - len1, sy, sx, sy);
+    g1.addColorStop(0, 'rgba(60,160,255,0)');
+    g1.addColorStop(0.6, 'rgba(80,200,255,0.3)');
+    g1.addColorStop(1, 'rgba(140,240,255,0.55)');
+    ctx.fillStyle = g1;
     ctx.beginPath();
-    ctx.moveTo(sx - len, sy);
+    ctx.moveTo(sx - len1, sy + jitter());
     ctx.lineTo(sx - 2, sy - hw);
     ctx.lineTo(sx - 2, sy + hw);
-    ctx.closePath();
-    ctx.fill();
-    // Inner hot core
-    const grad2 = ctx.createLinearGradient(sx - len * 0.6, sy, sx, sy);
-    grad2.addColorStop(0, 'rgba(255,255,255,0)');
-    grad2.addColorStop(1, 'rgba(255,240,180,0.7)');
-    ctx.fillStyle = grad2;
+    ctx.closePath(); ctx.fill();
+    // Layer 2: cyan mid flame
+    const len2 = len1 * 0.65;
+    const g2 = ctx.createLinearGradient(sx - len2, sy, sx, sy);
+    g2.addColorStop(0, 'rgba(0,255,240,0)');
+    g2.addColorStop(1, 'rgba(0,255,240,0.5)');
+    ctx.fillStyle = g2;
     ctx.beginPath();
-    ctx.moveTo(sx - len * 0.6, sy);
-    ctx.lineTo(sx - 2, sy - hw * 0.4);
-    ctx.lineTo(sx - 2, sy + hw * 0.4);
-    ctx.closePath();
-    ctx.fill();
+    ctx.moveTo(sx - len2, sy + jitter());
+    ctx.lineTo(sx - 2, sy - hw * 0.55);
+    ctx.lineTo(sx - 2, sy + hw * 0.55);
+    ctx.closePath(); ctx.fill();
+    // Layer 3: white-hot core
+    const len3 = len1 * 0.35;
+    const g3 = ctx.createLinearGradient(sx - len3, sy, sx, sy);
+    g3.addColorStop(0, 'rgba(255,255,255,0)');
+    g3.addColorStop(1, 'rgba(255,245,180,0.85)');
+    ctx.fillStyle = g3;
+    ctx.beginPath();
+    ctx.moveTo(sx - len3, sy);
+    ctx.lineTo(sx - 2, sy - hw * 0.28);
+    ctx.lineTo(sx - 2, sy + hw * 0.28);
+    ctx.closePath(); ctx.fill();
   }
 
   _drawShip(ctx, cx, cy, size) {
@@ -2810,48 +2873,87 @@ class SpaceGame {
   }
 
   _drawBlackHole(ctx, cx, cy, r) {
+    const angle = this.holeAngle;
     // Outer glow rings
     for (let i = 4; i >= 1; i--) {
-      const g = ctx.createRadialGradient(cx, cy, r * i * 0.18, cx, cy, r * i * 0.55);
-      g.addColorStop(0, `rgba(140,50,255,${0.12 / i})`);
+      const g = ctx.createRadialGradient(cx, cy, r * i * 0.18, cx, cy, r * i * 0.6);
+      const colors = ['rgba(140,50,255,','rgba(255,80,180,','rgba(60,140,255,','rgba(255,160,60,'];
+      g.addColorStop(0, `${colors[i%4]}${0.14/i})`);
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(cx, cy, r * i * 0.55, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, cy, r * i * 0.6, 0, Math.PI * 2); ctx.fill();
     }
-    // Accretion disk arc
+    // Rotating accretion disk
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.scale(1, 0.32);
-    const diskGrad = ctx.createRadialGradient(0, 0, r * 0.55, 0, 0, r * 1.3);
-    diskGrad.addColorStop(0, 'rgba(255,160,60,0.0)');
-    diskGrad.addColorStop(0.35, 'rgba(255,200,80,0.65)');
-    diskGrad.addColorStop(0.7, 'rgba(200,80,255,0.45)');
-    diskGrad.addColorStop(1, 'rgba(60,20,120,0)');
+    ctx.rotate(angle);
+    ctx.scale(1, 0.30);
+    const diskGrad = ctx.createRadialGradient(0, 0, r * 0.55, 0, 0, r * 1.4);
+    diskGrad.addColorStop(0,   'rgba(255,160,60,0.0)');
+    diskGrad.addColorStop(0.25,'rgba(255,220,80,0.7)');
+    diskGrad.addColorStop(0.55,'rgba(255,80,200,0.55)');
+    diskGrad.addColorStop(0.8, 'rgba(100,60,255,0.35)');
+    diskGrad.addColorStop(1,   'rgba(0,0,0,0)');
     ctx.fillStyle = diskGrad;
-    ctx.beginPath(); ctx.arc(0, 0, r * 1.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
     // Dark center
-    const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.56);
-    centerGrad.addColorStop(0, 'rgba(0,0,0,1)');
-    centerGrad.addColorStop(0.7, 'rgba(10,0,20,0.95)');
-    centerGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.58);
+    centerGrad.addColorStop(0,   'rgba(0,0,0,1)');
+    centerGrad.addColorStop(0.75,'rgba(10,0,20,0.96)');
+    centerGrad.addColorStop(1,   'rgba(0,0,0,0)');
     ctx.fillStyle = centerGrad;
-    ctx.beginPath(); ctx.arc(cx, cy, r * 0.56, 0, Math.PI * 2); ctx.fill();
-    // Photon ring
-    ctx.strokeStyle = 'rgba(255,220,100,0.75)';
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.58, 0, Math.PI * 2); ctx.fill();
+    // Photon ring (pulsing)
+    const pulse = 0.7 + Math.sin(angle * 3) * 0.25;
+    ctx.strokeStyle = `rgba(255,220,100,${pulse})`;
     ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(cx, cy, r * 0.56, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.58, 0, Math.PI * 2); ctx.stroke();
     // Label
     ctx.save();
     ctx.font = `bold ${Math.max(11, r * 0.38)}px Nunito,sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillStyle = 'rgba(200,160,255,0.85)';
-    ctx.fillText('终点', cx, cy + r * 0.6);
+    ctx.fillStyle = 'rgba(255,200,255,0.9)';
+    ctx.shadowColor = 'rgba(200,100,255,0.8)'; ctx.shadowBlur = 8;
+    ctx.fillText('终点', cx, cy + r * 0.65);
+    ctx.shadowBlur = 0;
     ctx.restore();
   }
 
+  _drawSaturn(ctx, cx, cy, r) {
+    // Ring (behind planet)
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1, 0.28);
+    const ringGrad = ctx.createRadialGradient(0, 0, r * 0.9, 0, 0, r * 2.2);
+    ringGrad.addColorStop(0,   'rgba(255,200,100,0)');
+    ringGrad.addColorStop(0.2, 'rgba(255,190,80,0.5)');
+    ringGrad.addColorStop(0.6, 'rgba(230,160,60,0.35)');
+    ringGrad.addColorStop(1,   'rgba(200,120,40,0)');
+    ctx.fillStyle = ringGrad;
+    ctx.beginPath(); ctx.arc(0, 0, r * 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Planet body
+    const pg = ctx.createRadialGradient(cx - r*0.25, cy - r*0.25, 0, cx, cy, r);
+    pg.addColorStop(0, '#ffd580');
+    pg.addColorStop(0.5, '#e8a84a');
+    pg.addColorStop(1, '#7a4010');
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = pg;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    // Band stripes
+    for (let i = 0; i < 3; i++) {
+      const by = cy - r * 0.3 + i * r * 0.3;
+      ctx.fillStyle = `rgba(180,80,20,${0.08 + i * 0.04})`;
+      ctx.beginPath(); ctx.ellipse(cx, by, r * 0.98, r * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   _drawDoors(ctx, W, H) {
-    for (const d of this.choices) {
+    const doorIcons = ['🌙', '⭐', '🪐', '☄️'];
+    for (let di = 0; di < this.choices.length; di++) {
+      const d = this.choices[di];
       const isHit = d.hit;
 
       // Door frame
@@ -2875,7 +2977,7 @@ class SpaceGame {
       ctx.roundRect(d.x, d.y, d.w, d.h, 10);
       ctx.stroke();
 
-      // Inner panel lines (sci-fi look)
+      // Inner panel lines
       ctx.strokeStyle = isHit ? 'rgba(255,100,100,0.3)' : 'rgba(100,200,255,0.15)';
       ctx.lineWidth = 1;
       const pad = 6;
@@ -2895,17 +2997,25 @@ class SpaceGame {
         ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
       });
 
+      // Top icon
+      const iconSize = Math.min(d.w * 0.38, 22);
+      ctx.font = `${iconSize}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.globalAlpha = isHit ? 0.4 : 0.85;
+      ctx.fillText(doorIcons[di], d.x + d.w / 2, d.y + d.h * 0.25);
+      ctx.globalAlpha = 1;
+
       // Answer number
-      const fontSize = Math.min(d.w * 0.55, d.h * 0.28, 40);
+      const fontSize = Math.min(d.w * 0.52, d.h * 0.26, 38);
       ctx.font = `900 ${fontSize}px Nunito,sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillStyle = isHit ? '#ff8888' : '#e0f0ff';
-      ctx.fillText(d.value, d.x + d.w / 2, d.y + d.h / 2);
+      ctx.fillText(d.value, d.x + d.w / 2, d.y + d.h * 0.62);
 
       // Top indicator light
       ctx.fillStyle = isHit ? '#ff4444' : 'rgba(100,200,255,0.7)';
       ctx.beginPath();
-      ctx.arc(d.x + d.w / 2, d.y + 14, 5, 0, Math.PI * 2);
+      ctx.arc(d.x + d.w / 2, d.y + 10, 4, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.textBaseline = 'alphabetic';
@@ -2952,6 +3062,7 @@ class SpaceGame {
     this.shipX = 0; this.targetShipX = 0;
     this.locked = false; this.gameEnded = false;
     this.particles = [];
+    this.holeAngle = 0;
     document.getElementById('overlay').classList.remove('show');
     const oc = document.getElementById('overlay-canvas');
     oc.getContext('2d').clearRect(0, 0, oc.width, oc.height);

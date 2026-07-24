@@ -2639,10 +2639,9 @@ window.addEventListener('load', async () => {
 
   runIntroSequence(level, mode).then(async () => {
     let game;
-    if (mode === 'audio') {
-      // 听算模式：所有关卡均使用语音交互
-      game = new VoiceGame(level, recognizer);
-    } else if (level === 5) {
+    // Each level uses its own visual game class.
+    // In audio mode, VoiceMixin is applied inside each class constructor.
+    if (level === 5) {
       game = new BattleGame(mode, recognizer);
     } else if (level === 2) {
       game = new VoiceGame(level, recognizer);

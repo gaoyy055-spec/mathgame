@@ -1202,17 +1202,15 @@ body.danger-active #canvas-wrapper {
   background: linear-gradient(135deg, #9E9E9E, #BDBDBD);
   box-shadow: 0 5px 0 #616161;
 }
-#float-voice-skip {
-  height: 30px; padding: 0 14px; border: none; border-radius: 10px;
-  background: rgba(255,255,255,0.75); color: #E65100;
-  border: 1.5px solid #FFCC80;
-  font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit;
-  box-shadow: 0 2px 0 #FFB74D;
+#float-voice-status {
+  font-size: 14px; font-weight: 800; color: #E65100;
+  height: 20px; text-align: center;
+  text-shadow: 0 1px 4px rgba(255,255,255,0.8);
 }
 </style>
 <div id="float-voice-overlay" style="display:none;">
   <div id="float-voice-mic-btn">🎙️</div>
-  <button id="float-voice-skip">⏭️ 跳过</button>
+  <div id="float-voice-status"></div>
 </div>
 
 <!-- ===== INTRO OVERLAY ===== -->
@@ -1976,16 +1974,6 @@ const VoiceMixin = {
     const ov = document.getElementById('float-voice-overlay');
     if (ov) { ov.style.display = 'flex'; }
     this._setupVoice();
-    // bind skip button
-    const skipBtn = document.getElementById('float-voice-skip');
-    if (skipBtn) {
-      skipBtn.addEventListener('click', () => {
-        this._playTTS('好的，换下一题！');
-        this._cancelRepeatTimer();
-        this._stopVoice();
-        this._skipQuestion();
-      });
-    }
     // bind mic button
     const micBtn = document.getElementById('float-voice-mic-btn');
     if (micBtn) {

@@ -1686,7 +1686,7 @@ const LEVEL_INTROS = {
 const LEVEL_OVERLAY_BG = {
   // Lv1: blue PK scene
   1: 'linear-gradient(160deg, rgba(179,212,255,0.95) 0%, rgba(128,186,255,0.95) 40%, rgba(77,159,255,0.95) 100%)',
-  2: 'linear-gradient(135deg, rgba(249,199,132,0.92) 0%, rgba(245,168,87,0.92) 40%, rgba(239,154,78,0.92) 100%)',
+  2: 'linear-gradient(160deg, rgba(255,224,176,0.95) 0%, rgba(255,186,120,0.95) 40%, rgba(255,154,60,0.95) 100%)',
   // Lv3: green racing scene (sky→grass gradient)
   3: 'linear-gradient(180deg, rgba(135,206,235,0.88) 0%, rgba(152,216,200,0.88) 30%, rgba(93,188,93,0.88) 60%, rgba(74,158,74,0.88) 100%)',
   // Lv4: deep space scene
@@ -1757,6 +1757,10 @@ function runIntroSequence(level, mode = 'visual') {
       introBox.style.border = '4px solid #4D9FFF';
       introBox.style.boxShadow = '0 12px 0 #1E78C8, 0 16px 48px rgba(30,120,200,0.35)';
       document.getElementById('intro-title').style.color = '#1565C0';
+    } else if (level === 2) {
+      introBox.style.border = '4px solid #FFA040';
+      introBox.style.boxShadow = '0 12px 0 #E65100, 0 16px 48px rgba(230,81,0,0.35)';
+      document.getElementById('intro-title').style.color = '#E65100';
     } else if (level === 3) {
       introBox.style.border = '4px solid #66bb6a';
       introBox.style.boxShadow = '0 12px 0 #388e3c, 0 16px 48px rgba(56,142,60,0.35)';
@@ -3754,7 +3758,16 @@ class VoiceGame {
     document.getElementById('pk-section').style.display = 'flex';
     document.getElementById('question-section').style.display = 'flex';
     document.body.style.paddingTop = '70px';
-    document.body.style.background = 'linear-gradient(160deg, #FFF8F0 0%, #FFE0C0 40%, #FFBA7A 70%, #FF9A3C 100%)';
+    document.body.style.background = '#FFD9A0';
+    document.getElementById('pk-section').style.background = '#FFD9A0';
+    document.getElementById('pk-section').style.borderBottom = '4px solid #FFA040';
+    document.getElementById('question-section').style.background = '#FFD9A0';
+    document.getElementById('question-section').style.borderBottom = '3px dashed #FFA040';
+    document.getElementById('answer-section').style.background = 'linear-gradient(180deg, #FFF3E0 0%, #FFE0B2 60%, #FFCC80 100%)';
+    const vc = document.getElementById('voice-canvas-wrapper');
+    if (vc) { vc.style.border = '3px dashed #FFA040'; vc.style.boxShadow = '0 4px 0 #FFD580, 0 6px 18px rgba(255,140,0,0.15)'; }
+    const vs = document.getElementById('voice-section');
+    if (vs) vs.style.background = 'linear-gradient(180deg, #FFF3E0 0%, #FFE0B2 60%, #FFCC80 100%)';
     if (this.level === 2) {
       document.getElementById('monster-svg-default').style.display = 'none';
       document.getElementById('monster-svg-lv2').style.display = '';

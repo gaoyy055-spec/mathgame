@@ -543,6 +543,26 @@ body.danger-active #canvas-wrapper {
   border: 2px solid #90CAF9;
   min-width: 80px;
 }
+/* Float voice mic button - same style as #voice-mic-btn */
+.fv-mic-btn {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #FF8C42, #FFD700);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  box-shadow: 0 5px 0 #E65C00, 0 8px 20px rgba(255,100,0,0.3);
+  cursor: pointer; transition: transform 0.12s;
+  border: 3px solid white;
+  flex-shrink: 0;
+}
+.fv-mic-btn.listening {
+  background: linear-gradient(135deg, #43A047, #00E676);
+  box-shadow: 0 5px 0 #2E7D32, 0 8px 20px rgba(0,200,100,0.4);
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+.fv-mic-btn.inactive {
+  background: linear-gradient(135deg, #9E9E9E, #BDBDBD);
+  box-shadow: 0 5px 0 #616161;
+}
 
 /* ===== OVERLAY ===== */
 #overlay {
@@ -1178,33 +1198,33 @@ body.danger-active #canvas-wrapper {
 
 <!-- ===== GENERIC FLOATING VOICE OVERLAY (used in audio mode for all levels) ===== -->
 <div id="float-voice-overlay" style="display:none; position:fixed; z-index:300;
-  bottom:16px; left:50%; transform:translateX(-50%);
-  background:rgba(20,20,40,0.92); border-radius:24px;
-  border:2px solid rgba(100,200,255,0.4);
-  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(0,150,255,0.2);
-  padding:12px 22px 12px; flex-direction:column; align-items:center; gap:6px;
-  min-width:260px; max-width:90vw;">
-  <div id="float-voice-mic-btn" style="
-    width:60px; height:60px; border-radius:50%;
-    background:linear-gradient(135deg,#FF8C42,#FFD700);
-    display:flex; align-items:center; justify-content:center;
-    font-size:28px;
-    box-shadow:0 4px 0 #E65C00, 0 6px 18px rgba(255,100,0,0.35);
-    cursor:pointer; border:3px solid rgba(255,255,255,0.6);
-    transition:transform 0.12s; flex-shrink:0;">🎙️</div>
-  <div id="float-voice-status" style="font-size:13px;font-weight:800;color:#FFD700;height:18px;text-align:center;"></div>
-  <div id="float-voice-heard" style="font-size:22px;font-weight:900;color:#7fffff;
-    min-height:30px; text-align:center;
-    background:rgba(255,255,255,0.08); padding:2px 16px;
-    border-radius:12px; border:2px solid rgba(100,200,255,0.3);
-    min-width:80px;"></div>
-  <div style="display:flex;gap:8px;margin-top:2px;">
-    <button id="float-voice-skip" style="
-      height:30px; padding:0 14px; border:none; border-radius:10px;
-      background:rgba(100,200,255,0.2); color:#7fffff;
-      border:1.5px solid rgba(100,200,255,0.3);
-      font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">⏭️ 跳过</button>
+  bottom:0; left:0; right:0;
+  background:linear-gradient(180deg,#FFF3E0 0%,#FFE0B2 60%,#FFCC80 100%);
+  border-top:4px solid #FFA040;
+  padding:8px 16px 10px;
+  flex-direction:column; align-items:center; gap:6px;
+  box-shadow:0 -4px 20px rgba(255,120,0,0.15);">
+  <div style="font-size:12px;font-weight:800;color:#BF360C;align-self:flex-start;">✏️ 草稿区（写写算算，不会提交）</div>
+  <div id="float-scratch-wrapper" style="
+    width:100%; max-width:640px; height:90px;
+    background:white; border-radius:14px;
+    border:3px dashed #FFB74D;
+    box-shadow:0 3px 0 #FFD580;
+    overflow:hidden; position:relative;">
+    <canvas id="float-scratch-canvas" style="width:100%;height:100%;display:block;cursor:crosshair;touch-action:none;"></canvas>
+    <div id="float-scratch-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      font-size:28px;color:rgba(0,0,0,0.06);font-weight:900;pointer-events:none;">草稿本</div>
   </div>
+  <div style="display:flex;gap:8px;width:100%;max-width:640px;align-items:center;justify-content:center;">
+    <button id="float-voice-clear" class="ctrl-btn" style="flex:1;max-width:120px;">🗑️ 清空草稿</button>
+    <div id="float-voice-mic-btn" class="fv-mic-btn">🎙️</div>
+    <button id="float-voice-skip" class="ctrl-btn" style="flex:1;max-width:120px;">⏭️ 跳过这题</button>
+  </div>
+  <div id="float-voice-status" style="font-size:14px;font-weight:800;color:#E65100;height:20px;text-align:center;"></div>
+  <div id="float-voice-heard" style="font-size:22px;font-weight:900;color:#1565C0;
+    min-height:30px;text-align:center;
+    background:rgba(255,255,255,0.8);padding:2px 16px;
+    border-radius:12px;border:2px solid #90CAF9;min-width:80px;"></div>
 </div>
 
 <!-- ===== INTRO OVERLAY ===== -->
@@ -1968,6 +1988,8 @@ const VoiceMixin = {
     const ov = document.getElementById('float-voice-overlay');
     if (ov) { ov.style.display = 'flex'; }
     this._setupVoice();
+    // Init scratch canvas
+    this._fvInitScratch();
     // bind skip button
     const skipBtn = document.getElementById('float-voice-skip');
     if (skipBtn) {
@@ -1995,12 +2017,50 @@ const VoiceMixin = {
     if (ov) ov.style.display = 'none';
   },
 
+  _fvInitScratch() {
+    const wrapper = document.getElementById('float-scratch-wrapper');
+    const canvas = document.getElementById('float-scratch-canvas');
+    if (!wrapper || !canvas) return;
+    // Size canvas
+    const resize = () => {
+      canvas.width = wrapper.clientWidth || wrapper.offsetWidth || 300;
+      canvas.height = wrapper.clientHeight || wrapper.offsetHeight || 90;
+    };
+    if (wrapper.clientWidth > 0) resize();
+    else requestAnimationFrame(resize);
+    window.addEventListener('resize', resize);
+
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    const pos = e => {
+      const r = canvas.getBoundingClientRect();
+      const s = e.touches ? e.touches[0] : e;
+      return { x:(s.clientX-r.left)*(canvas.width/r.width), y:(s.clientY-r.top)*(canvas.height/r.height) };
+    };
+    const hint = document.getElementById('float-scratch-hint');
+    canvas.addEventListener('mousedown', e => { e.preventDefault(); drawing=true; if(hint) hint.style.opacity='0'; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+    canvas.addEventListener('mousemove', e => { if(!drawing) return; e.preventDefault(); const p=pos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#3E2723'; ctx.lineWidth=Math.max(canvas.width/30,5); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke(); });
+    canvas.addEventListener('mouseup', () => { drawing=false; });
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; if(hint) hint.style.opacity='0'; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }, {passive:false});
+    canvas.addEventListener('touchmove', e => { if(!drawing) return; e.preventDefault(); const p=pos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#3E2723'; ctx.lineWidth=Math.max(canvas.width/30,5); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke(); }, {passive:false});
+    canvas.addEventListener('touchend', () => { drawing=false; });
+
+    // Clear button
+    const clearBtn = document.getElementById('float-voice-clear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(hint) hint.style.opacity='1';
+      });
+    }
+  },
+
   _setupVoice() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       this._setVoiceStatus('浏览器不支持语音，请用Chrome');
       const micBtn = document.getElementById('float-voice-mic-btn');
-      if (micBtn) micBtn.style.opacity = '0.4';
+      if (micBtn) micBtn.classList.add('inactive');
       return;
     }
     this.recognition = new SR();
@@ -2013,14 +2073,14 @@ const VoiceMixin = {
       this.recognizing = true;
       this._interimFired = false;
       const mb = document.getElementById('float-voice-mic-btn');
-      if (mb) { mb.style.background = 'linear-gradient(135deg,#43A047,#00E676)'; mb.style.boxShadow='0 4px 0 #2E7D32, 0 6px 20px rgba(0,200,100,0.4)'; }
+      if (mb) { mb.classList.add('listening'); mb.classList.remove('inactive'); }
       this._setVoiceStatus('正在聆听...');
       this._setVoiceHeard('');
     };
     this.recognition.onend = () => {
       this.recognizing = false;
       const mb = document.getElementById('float-voice-mic-btn');
-      if (mb) { mb.style.background = 'linear-gradient(135deg,#FF8C42,#FFD700)'; mb.style.boxShadow='0 4px 0 #E65C00, 0 6px 18px rgba(255,100,0,0.35)'; }
+      if (mb) { mb.classList.remove('listening'); }
       this._setVoiceStatus('点击麦克风再次输入');
       if (!this.gameEnded && !this.locked) {
         setTimeout(() => {
@@ -2031,7 +2091,7 @@ const VoiceMixin = {
     this.recognition.onerror = (e) => {
       this.recognizing = false;
       const mb = document.getElementById('float-voice-mic-btn');
-      if (mb) { mb.style.background = 'linear-gradient(135deg,#FF8C42,#FFD700)'; mb.style.boxShadow='0 4px 0 #E65C00, 0 6px 18px rgba(255,100,0,0.35)'; }
+      if (mb) { mb.classList.remove('listening'); }
       if (e.error === 'no-speech') {
         this._setVoiceStatus('没听到，请再说一次');
         if (!this.gameEnded && !this.locked) setTimeout(() => { if (!this.gameEnded && !this.locked) this._startVoice(); }, 500);

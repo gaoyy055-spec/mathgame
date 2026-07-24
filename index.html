@@ -2299,7 +2299,7 @@ class Game {
     });
   }
 
-
+  _bindEvents() {
     window.addEventListener('resize', () => { this._resizeCanvas(); this._clearCanvas(); });
     const c = this.canvas;
     const pos = e => {

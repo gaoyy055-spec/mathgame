@@ -2499,7 +2499,7 @@ class SpaceGame {
   _updateHeader() {
     document.getElementById('space-done').textContent = this.done;
     document.getElementById('space-progress-fill').style.width = (this.done / SPACE_TOTAL * 100) + '%';
-    document.getElementById('space-score-badge').textContent = `🚀 ${this.done === 0 ? '飞船前进中' : `已过 ${this.done} 关！`}`;
+    document.getElementById('space-score-badge').style.display = 'none';
   }
 
   _bindEvents() {
@@ -2663,8 +2663,7 @@ class SpaceGame {
       ctx.globalAlpha = 1;
     }
 
-    // Saturn (left side, orange rings)
-    this._drawSaturn(ctx, W * 0.12, H * 0.18, Math.min(W,H) * 0.07);
+    // Saturn removed
 
     // Distant planet (right side, purple)
     const planetR = Math.min(W, H) * 0.10;
@@ -2709,7 +2708,7 @@ class SpaceGame {
 
     // Black hole at track end (animated)
     this.holeAngle += 0.018;
-    this._drawBlackHole(ctx, trackEndX, trackY, Math.min(W, H) * 0.085);
+    this._drawBlackHole(ctx, trackEndX, trackY, Math.min(W, H) * 0.13);
 
     // Engine exhaust trail
     this._drawExhaust(ctx, shipCanvasX, shipY, W, H);

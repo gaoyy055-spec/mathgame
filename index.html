@@ -113,13 +113,14 @@ body {
   height: auto !important;
   overflow: visible !important;
 }
-/* answer-section: fill all remaining space to cover background */
+/* answer-section: fixed height so feedback-msg never pushes it down */
 #race-ui #answer-section {
   display: flex !important;
-  flex: 1 1 0 !important;
+  flex: 0 0 67vh !important;
   min-height: 0 !important;
-  height: auto !important;
-  max-height: none !important;
+  height: 67vh !important;
+  max-height: 67vh !important;
+  overflow: hidden !important;
 }
 #race-ui #canvas-wrapper {
   flex: 1 !important;

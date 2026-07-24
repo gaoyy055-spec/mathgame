@@ -111,6 +111,7 @@ body {
   flex: 0 0 13vh !important;
   min-height: 0 !important;
   height: 13vh !important;
+  overflow: visible !important;
 }
 /* answer-section: fill all remaining space to cover background */
 #race-ui #answer-section {
@@ -272,6 +273,16 @@ body {
 #feedback-msg {
   font-size: 15px; font-weight: 800; height: 22px;
   display: flex; align-items: center; gap: 4px;
+}
+#race-ui #feedback-msg {
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  justify-content: center;
+  background: transparent;
+  pointer-events: none;
+  z-index: 10;
+  margin-top: 2px;
 }
 #feedback-msg.wrong { color: #E53935; animation: shake 0.4s; }
 #feedback-msg.correct { color: #43A047; }

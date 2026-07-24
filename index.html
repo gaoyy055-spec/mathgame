@@ -3201,9 +3201,34 @@ class RaceGame {
 
     ctx.restore(); // end sky clip
 
+    // ── START LINE ────────────────────────────────────────────────────────
+    // Drawn at the very bottom of the track (step 0 position)
+    const startLineY = startY - H * 0.04;
+    const sl_xl = lerp(tL_bot, tL_top, (startY - startLineY) / trackH);
+    const sl_xr = lerp(tR_bot, tR_top, (startY - startLineY) / trackH);
+    // White/black checkered start line
+    const slSegW = (sl_xr - sl_xl) / 8;
+    for (let si = 0; si < 8; si++) {
+      ctx.fillStyle = si % 2 === 0 ? 'white' : '#222';
+      ctx.fillRect(sl_xl + si * slSegW, startLineY - 5, slSegW, 10);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(sl_xl, startLineY); ctx.lineTo(sl_xr, startLineY); ctx.stroke();
+    // "START" label
+    const slFs = Math.max(8, W * 0.13);
+    ctx.font = `bold ${slFs}px Nunito,sans-serif`;
+    ctx.fillStyle = '#FFD700';
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 2.5;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeText('START', W * 0.5, startLineY - slFs * 0.9);
+    ctx.fillText('START', W * 0.5, startLineY - slFs * 0.9);
+    ctx.setLineDash([]);
+
     // ── CHARACTER ─────────────────────────────────────────────────────────
+    // step=0 → stand on start line; step=RACE_TOTAL → reach finish
     const depth = 1 - step / RACE_TOTAL;
-    const charT = lerp(0.04, 0.92, depth);
+    const startFrac = (startY - startLineY) / trackH;  // fraction from bottom where start line sits
+    const charT = lerp(startFrac, 0.92, depth);
     const charY = lerp(finishY, startY, charT);
     const charX = lerp((tL_top + tR_top)/2, (tL_bot + tR_bot)/2, charT);
     const charSize = isWarrior ? 190 : 100; // warrior larger, monster smaller

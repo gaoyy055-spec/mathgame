@@ -81,7 +81,7 @@ body {
 /* Center column: question + answer pinned to exact same position as Level 1 */
 #race-ui {
   position: absolute; z-index: 5;
-  top: 17vh;
+  top: 20vh;
   bottom: 0;
   left: 22%;
   right: 22%;
@@ -105,13 +105,12 @@ body {
   margin-bottom: 4px;
   z-index: 20;
 }
-/* question-section: exactly 13vh (= 13% of 100vh body), same as Level 1 */
+/* question-section: same height as Level 1 (13vh), starts at 20vh */
 #race-ui #question-section {
   display: flex !important;
   flex: 0 0 13vh !important;
   min-height: 0 !important;
   height: 13vh !important;
-  margin-top: -8px !important;
 }
 /* answer-section: fill all remaining space to cover background */
 #race-ui #answer-section {

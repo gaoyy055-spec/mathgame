@@ -166,6 +166,16 @@ body {
   border-bottom: 4px solid #C0392B;
   position: relative; z-index: 1;
   box-shadow: 0 4px 20px rgba(200,80,0,0.28);
+  transition: box-shadow 0.3s;
+}
+#pk-section.danger-mode {
+  animation: danger-flash 0.6s ease-in-out infinite alternate;
+  border-bottom-color: #FF1744 !important;
+  box-shadow: 0 4px 24px rgba(255,20,68,0.55) !important;
+}
+@keyframes danger-flash {
+  from { box-shadow: 0 4px 16px rgba(255,20,68,0.4), inset 0 0 0 3px rgba(255,20,68,0.25); }
+  to   { box-shadow: 0 4px 32px rgba(255,20,68,0.8), inset 0 0 0 3px rgba(255,20,68,0.7); }
 }
 #pk-section::before {
   content: '';
@@ -198,6 +208,12 @@ body {
   margin-bottom: 3px; text-align: center;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
+/* Urgency label when monster leads */
+#monster-score-label { transition: color 0.3s; }
+.danger-mode #monster-score-label { color: #FFD700 !important; animation: score-urgent 0.4s ease-in-out infinite alternate; }
+@keyframes score-urgent { from { transform: scale(1); } to { transform: scale(1.12); } }
+.danger-mode .character-wrap.monster-side-char { animation: monster-bounce 0.5s ease-in-out infinite alternate; }
+@keyframes monster-bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-4px) scale(1.08); } }
 .progress-track { display: none; }
 .progress-dots { display: none; }
 .progress-blocks {
@@ -230,6 +246,17 @@ body {
   100% { transform: scaleY(1); opacity: 1; }
 }
 .prog-block.lit-p, .prog-block.lit-m { animation: block-pop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+/* danger mode: monster blocks glow red */
+.danger-mode .prog-block.lit-m {
+  background: linear-gradient(135deg, #FF5252, #FF1744);
+  border-color: #B71C1C;
+  box-shadow: 0 0 10px #FF1744;
+  animation: block-danger 0.45s ease-in-out infinite alternate, block-pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes block-danger {
+  from { box-shadow: 0 0 6px #FF1744; }
+  to   { box-shadow: 0 0 16px #FF5252; }
+}
 
 /* Monster dot pop when monster scores */
 @keyframes monster-score-pop {
@@ -251,6 +278,23 @@ body {
 @keyframes vs-pulse {
   0%,100% { transform: scale(1) rotate(-5deg); }
   50%      { transform: scale(1.1) rotate(5deg); }
+}
+.danger-mode .vs-badge {
+  background: #FF1744; color: #fff; border-color: #FF1744;
+  animation: vs-danger 0.4s ease-in-out infinite alternate;
+}
+@keyframes vs-danger {
+  from { transform: scale(1) rotate(-5deg); }
+  to   { transform: scale(1.2) rotate(5deg); }
+}
+/* urgency score label when monster leading */
+#race-label.urgent {
+  background: #FF1744; color: #fff;
+  animation: label-urgent 0.5s ease-in-out infinite alternate;
+}
+@keyframes label-urgent {
+  from { transform: translateX(-50%) scale(1); }
+  to   { transform: translateX(-50%) scale(1.08); }
 }
 
 /* ===== MONSTER FULL indicator ===== */
@@ -309,6 +353,15 @@ body {
   font-size: 15px; font-weight: 800; height: 22px;
   display: flex; align-items: center; gap: 4px;
 }
+/* add urgent pulse to question card when monster leading */
+.danger-mode ~ #question-section #question-card,
+body.danger-active #question-card {
+  animation: question-card-urgent 0.5s ease-in-out infinite alternate;
+}
+@keyframes question-card-urgent {
+  from { box-shadow: 0 5px 0 #FFC107, 0 7px 20px rgba(255,150,0,0.18); }
+  to   { box-shadow: 0 5px 0 #FF1744, 0 7px 20px rgba(255,20,68,0.4); border-color: #FF1744; }
+}
 #feedback-msg.wrong { color: #E53935; animation: shake 0.4s; }
 #feedback-msg.correct { color: #43A047; }
 @keyframes shake {
@@ -325,6 +378,18 @@ body {
   align-items: center; padding: 10px 14px 12px;
   gap: 8px; background: linear-gradient(180deg, #FFF8E1 0%, #FFF3CD 60%, #FFE8A3 100%);
   position: relative; z-index: 1;
+  transition: background 0.4s;
+}
+/* danger mode: answer section hint */
+body.danger-active #answer-section {
+  background: linear-gradient(180deg, #FFF5F5 0%, #FFE0E0 60%, #FFCCCC 100%);
+}
+body.danger-active #canvas-wrapper {
+  animation: canvas-urgent 0.6s ease-in-out infinite alternate;
+}
+@keyframes canvas-urgent {
+  from { box-shadow: 0 8px 0 #4D9FFF, 0 10px 28px rgba(30,120,200,0.18); }
+  to   { box-shadow: 0 8px 0 #FF1744, 0 10px 28px rgba(255,20,68,0.35); border-color: #FF6B6B; }
 }
 #canvas-label {
   font-size: 15px; font-weight: 900; color: #D84315;
@@ -1039,13 +1104,13 @@ body {
       <div class="progress-blocks" id="monster-blocks"></div>
     </div>
   </div>
-  <div id="race-label">⚡ 比谁快 ⚡</div>
+  <div id="race-label" style="letter-spacing:3px;">⚡ 比谁快 ⚡</div>
 </div>
 
 <!-- ===== SECTION 2: QUESTION ===== -->
 <div id="question-section">
   <div id="question-card">
-    <span style="font-size:28px">🧮</span>
+    <span id="question-icon" style="font-size:28px;transition:all 0.3s">🧮</span>
     <div id="question-display">3 × 4 = ?</div>
     <div id="answer-mark" style="font-size:clamp(48px,9vw,72px);font-weight:900;width:1.2em;text-align:center;transition:opacity 0.25s;opacity:0;text-shadow:0 2px 8px rgba(0,0,0,0.18);line-height:1;"></div>
   </div>
@@ -1404,7 +1469,25 @@ function playWrongSound() {
 }
 
 // Show/hide pulsing red danger border (monster is leading)
-function setDangerBorder(on) {} // removed
+function setDangerBorder(on) {
+  const pk = document.getElementById('pk-section');
+  if (!pk) return;
+  if (on) {
+    pk.classList.add('danger-mode');
+    document.body.classList.add('danger-active');
+    const rl = document.getElementById('race-label');
+    if (rl) { rl.textContent = '🔥 加快！怪兽领先了！'; rl.classList.add('urgent'); }
+    const qi = document.getElementById('question-icon');
+    if (qi) qi.textContent = '🔥';
+  } else {
+    pk.classList.remove('danger-mode');
+    document.body.classList.remove('danger-active');
+    const rl = document.getElementById('race-label');
+    if (rl) { rl.textContent = '⚡ 比谁快 ⚡'; rl.classList.remove('urgent'); }
+    const qi = document.getElementById('question-icon');
+    if (qi) qi.textContent = '🧮';
+  }
+}
 
 // ===== BACKGROUND MUSIC =====
 // Upbeat chiptune-style adventure track — major key, punchy, child-friendly
@@ -1560,14 +1643,17 @@ const BGM = (() => {
 function playMonsterScoreSound() {
   try {
     const ac = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-    osc.connect(gain); gain.connect(ac.destination);
-    osc.type = 'sine'; osc.frequency.value = 90;
-    osc.frequency.exponentialRampToValueAtTime(55, ac.currentTime + 0.18);
-    gain.gain.setValueAtTime(0.4, ac.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.22);
-    osc.start(ac.currentTime); osc.stop(ac.currentTime + 0.24);
+    // Two-note "uh-oh" descending tone for urgency
+    [[120, 85, 0], [80, 55, 0.14]].forEach(([from, to, delay]) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.type = 'sawtooth'; osc.frequency.value = from;
+      osc.frequency.exponentialRampToValueAtTime(to, ac.currentTime + delay + 0.16);
+      gain.gain.setValueAtTime(0.35, ac.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + delay + 0.22);
+      osc.start(ac.currentTime + delay); osc.stop(ac.currentTime + delay + 0.26);
+    });
   } catch(e) {}
 }
 

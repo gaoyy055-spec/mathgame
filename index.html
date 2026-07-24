@@ -105,13 +105,22 @@ body {
   margin-bottom: 4px;
   z-index: 20;
 }
-/* question-section: same as Level 1, height auto to fit question-card + feedback-msg */
+/* question-section: fixed height like Level 1, feedback overlaps bottom edge */
 #race-ui #question-section {
   display: flex !important;
-  flex: 0 0 auto !important;
-  min-height: 13vh !important;
-  height: auto !important;
+  flex: 0 0 13vh !important;
+  height: 13vh !important;
+  min-height: 0 !important;
   overflow: visible !important;
+  position: relative !important;
+}
+#race-ui #feedback-msg {
+  position: absolute !important;
+  bottom: -24px !important;
+  left: 0; right: 0;
+  justify-content: center;
+  height: 22px !important;
+  pointer-events: none;
 }
 /* answer-section: fill all remaining space to cover background */
 #race-ui #answer-section {

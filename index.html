@@ -3382,7 +3382,7 @@ class RaceGame {
   }
 
   nextQuestion() {
-    // Level 3: 7~9 multiplication
+    // Level 3: 7~9 multiplication (RaceGame marker)
     const a = Math.floor(Math.random()*3)+7;
     const b = Math.floor(Math.random()*3)+7;
     this.currentAnswer = a * b;
@@ -3399,6 +3399,9 @@ class RaceGame {
   _setFeedback(msg, type) {
     const el = document.getElementById('feedback-msg');
     el.textContent = msg; el.className = type;
+    // When feedback appears, nudge question-section up so text isn't clipped
+    const qs = document.getElementById('question-section');
+    if (qs) qs.style.marginTop = msg ? '-18px' : '';
   }
 
   _skipQuestion() {

@@ -1476,15 +1476,11 @@ function setDangerBorder(on) {
     document.body.classList.add('danger-active');
     const rl = document.getElementById('race-label');
     if (rl) { rl.textContent = '🔥 加快！怪兽领先了！'; rl.classList.add('urgent'); }
-    const qi = document.getElementById('question-icon');
-    if (qi) qi.textContent = '🔥';
   } else {
     pk.classList.remove('danger-mode');
     document.body.classList.remove('danger-active');
     const rl = document.getElementById('race-label');
     if (rl) { rl.textContent = '⚡ 比谁快 ⚡'; rl.classList.remove('urgent'); }
-    const qi = document.getElementById('question-icon');
-    if (qi) qi.textContent = '🧮';
   }
 }
 

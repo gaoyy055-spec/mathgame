@@ -77,13 +77,14 @@ body {
   position: fixed; z-index: 20;
   font-size: 13px; font-weight: 800;
   background: rgba(255,255,255,0.88);
-  padding: 4px 12px; border-radius: 12px;
+  padding: 4px 10px; border-radius: 12px;
   display: flex; align-items: center; gap: 4px;
-  top: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
-#race-prog-player { left: 12px; color: #1565C0; border: 2px solid #90CAF9; }
-#race-prog-monster { right: 12px; color: #6A1B9A; border: 2px solid #CE93D8; }
+#race-prog-player  { left: 11%; top: 8px; color: #1565C0; border: 2px solid #90CAF9; }
+#race-prog-monster { left: 89%; top: 8px; color: #6A1B9A; border: 2px solid #CE93D8; }
 
 /* Center column: question + answer pinned to exact same position as Level 1 */
 #race-ui {
@@ -935,7 +936,7 @@ body.danger-active #canvas-wrapper {
     <div id="race-step-info"></div>
   </div>
   <!-- Floating progress boxes -->
-  <div id="race-prog-player" class="race-prog-box">⚔️ 勇士 <span id="race-player-step">0</span>/10</div>
+  <div id="race-prog-player" class="race-prog-box">⚔️ 我 <span id="race-player-step">0</span>/10</div>
   <div id="race-prog-monster" class="race-prog-box">👾 怪兽 <span id="race-monster-step">0</span>/10</div>
   <!-- Center column: question + answer injected here by JS -->
   <div id="race-ui">

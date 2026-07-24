@@ -2457,27 +2457,20 @@ class SpaceGame {
       if (v > 0 && v !== correct) pool.add(v);
     }
     const values = [...pool].sort(() => Math.random() - 0.5);
-    // 4 choice tiles centered horizontally, in the lower portion of the screen
-    const tileW = Math.min(W * 0.18, 110);
-    const tileH = Math.min(tileW * 1.1, 88);
-    const gap = Math.min(W * 0.04, 18);
-    const totalW = tileW * 4 + gap * 3;
+    // 4 doors centered horizontally, lower portion of screen
+    const doorW = Math.min(W * 0.14, 90);
+    const doorH = Math.min(H * 0.30, 160);
+    const gap = Math.min(W * 0.04, 20);
+    const totalW = doorW * 4 + gap * 3;
     const startX = (W - totalW) / 2;
-    const tileY = H * 0.72;
-    const colors = [
-      { bg: ['#ff6b6b','#ee5a5a'], glow: '#ff6b6b', text: '#fff' },
-      { bg: ['#ffa94d','#ff9130'], glow: '#ffa94d', text: '#fff' },
-      { bg: ['#51cf66','#3cba56'], glow: '#51cf66', text: '#fff' },
-      { bg: ['#339af0','#228be6'], glow: '#339af0', text: '#fff' },
-    ];
+    const doorY = H * 0.65;
     this.choices = values.map((v, i) => ({
       value: v,
-      x: startX + i * (tileW + gap),
-      y: tileY,
-      w: tileW,
-      h: tileH,
+      x: startX + i * (doorW + gap),
+      y: doorY,
+      w: doorW,
+      h: doorH,
       hit: false,
-      color: colors[i],
     }));
   }
 
@@ -2860,49 +2853,60 @@ class SpaceGame {
   _drawDoors(ctx, W, H) {
     for (const d of this.choices) {
       const isHit = d.hit;
-      const c = d.color;
-      const cx = d.x + d.w / 2;
-      const cy = d.y + d.h / 2;
-      const r = Math.min(d.w, d.h) * 0.42;
 
-      // Outer glow
-      if (!isHit) {
-        ctx.save();
-        ctx.shadowColor = c.glow;
-        ctx.shadowBlur = 18;
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = 'transparent'; ctx.fill();
-        ctx.restore();
-      }
-
-      // Circle background
-      const bg = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.25, 0, cx, cy, r);
+      // Door frame
+      const grad = ctx.createLinearGradient(d.x, d.y, d.x + d.w, d.y + d.h);
       if (isHit) {
-        bg.addColorStop(0, '#7f1d1d'); bg.addColorStop(1, '#450a0a');
+        grad.addColorStop(0, '#7f1d1d');
+        grad.addColorStop(1, '#991b1b');
       } else {
-        bg.addColorStop(0, c.bg[0]); bg.addColorStop(1, c.bg[1]);
+        grad.addColorStop(0, '#1e3a5f');
+        grad.addColorStop(1, '#0c1a2e');
       }
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = bg; ctx.fill();
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(d.x, d.y, d.w, d.h, 10);
+      ctx.fill();
 
-      // White ring
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = isHit ? '#ff4444' : 'rgba(255,255,255,0.55)';
-      ctx.lineWidth = 3; ctx.stroke();
+      // Border glow
+      ctx.strokeStyle = isHit ? '#ff4444' : 'rgba(100,180,255,0.6)';
+      ctx.lineWidth = isHit ? 3 : 2;
+      ctx.beginPath();
+      ctx.roundRect(d.x, d.y, d.w, d.h, 10);
+      ctx.stroke();
 
-      // Inner shine arc
-      ctx.save();
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.82, Math.PI * 1.1, Math.PI * 1.9);
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 5; ctx.stroke();
-      ctx.restore();
+      // Inner panel lines (sci-fi look)
+      ctx.strokeStyle = isHit ? 'rgba(255,100,100,0.3)' : 'rgba(100,200,255,0.15)';
+      ctx.lineWidth = 1;
+      const pad = 6;
+      ctx.beginPath();
+      ctx.roundRect(d.x + pad, d.y + pad, d.w - pad * 2, d.h - pad * 2, 6);
+      ctx.stroke();
+
+      // Corner accent dots
+      const corners = [
+        [d.x + pad + 4, d.y + pad + 4],
+        [d.x + d.w - pad - 4, d.y + pad + 4],
+        [d.x + pad + 4, d.y + d.h - pad - 4],
+        [d.x + d.w - pad - 4, d.y + d.h - pad - 4],
+      ];
+      ctx.fillStyle = isHit ? '#ff6666' : 'rgba(100,200,255,0.5)';
+      corners.forEach(([cx, cy]) => {
+        ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
+      });
 
       // Answer number
-      const fontSize = Math.min(r * 1.0, 38);
+      const fontSize = Math.min(d.w * 0.55, d.h * 0.28, 40);
       ctx.font = `900 ${fontSize}px Nunito,sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = isHit ? '#ff8888' : 'white';
-      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4;
-      ctx.fillText(d.value, cx, cy);
-      ctx.shadowBlur = 0;
+      ctx.fillStyle = isHit ? '#ff8888' : '#e0f0ff';
+      ctx.fillText(d.value, d.x + d.w / 2, d.y + d.h / 2);
+
+      // Top indicator light
+      ctx.fillStyle = isHit ? '#ff4444' : 'rgba(100,200,255,0.7)';
+      ctx.beginPath();
+      ctx.arc(d.x + d.w / 2, d.y + 14, 5, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.textBaseline = 'alphabetic';
   }

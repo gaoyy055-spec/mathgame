@@ -3015,6 +3015,21 @@ class RaceGame {
     ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(archCX, archBaseY, archRx, archRy, 0, Math.PI, 0); ctx.stroke();
 
+    // Fill arch interior with sky gradient to hide the blue innermost layer
+    const innermost = archRx * (1 - 0.28);
+    const innermostY = archRy * (1 - 0.28);
+    const skyFill = ctx.createLinearGradient(0, 0, 0, finishY);
+    skyFill.addColorStop(0,    '#1E78C8');
+    skyFill.addColorStop(0.45, '#4EA8E8');
+    skyFill.addColorStop(1,    '#B8DEFA');
+    ctx.fillStyle = skyFill;
+    ctx.beginPath();
+    ctx.ellipse(archCX, archBaseY, innermost, innermostY, 0, Math.PI, 0);
+    ctx.lineTo(archCX + innermost, archBaseY);
+    ctx.ellipse(archCX, archBaseY, innermost, innermostY, 0, 0, Math.PI);
+    ctx.closePath();
+    ctx.fill();
+
     // Left pillar (sky portion only — clipped above)
     const pillarW = archThick * 0.9;
     const pillarH = archH * 0.55;

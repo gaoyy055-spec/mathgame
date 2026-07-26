@@ -1191,7 +1191,7 @@ body.danger-active #canvas-wrapper {
   <!-- Scratch area for Level 3 audio mode -->
   <div id="race-scratch-wrapper" style="display:none; flex:0 0 clamp(170px, 40vh, 255px); width:100%; max-width:640px; background:white; border-radius:28px; border:3px solid #66bb6a; box-shadow:0 6px 0 #66bb6a,0 8px 24px rgba(40,160,40,0.15); overflow:hidden; position:relative; min-height:80px;">
     <canvas id="race-scratch-canvas"></canvas>
-    <div id="race-scratch-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:52px;color:rgba(0,0,0,0.06);font-weight:900;pointer-events:none;text-align:center;line-height:1.2;">草稿本</div>
+    <div id="race-scratch-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:52px;color:rgba(0,0,0,0.06);font-weight:900;pointer-events:none;text-align:center;line-height:1.2;">草稿本，随意涂写</div>
   </div>
   <div id="race-scratch-controls" style="display:none; gap:12px; width:100%; max-width:640px;">
     <button class="ctrl-btn" id="race-scratch-clear-btn" style="background:#E8F5E9;color:#2E7D32;border:2.5px solid #81C784;box-shadow:0 4px 0 #81C784;">🗑️ 清空草稿</button>
@@ -1515,7 +1515,7 @@ body.danger-active #canvas-wrapper {
       <div id="battle-scratch-label" style="display:none; font-size:15px; font-weight:900; color:#FF6B35; align-items:center; gap:6px; background:rgba(255,255,255,0.6); border-radius:10px; padding:4px 12px; margin-bottom:4px; width:fit-content; align-self:center;">✏️ 草稿区（写写算算，不会提交）</div>
       <div id="battle-scratch-wrapper" style="display:none; width:100%; background:rgba(255,255,255,0.95); border-radius:18px; border:3px solid rgba(255,180,50,0.6); box-shadow:0 6px 20px rgba(0,0,0,0.4),0 0 30px rgba(255,180,50,0.15); overflow:hidden; position:relative; flex:0 0 clamp(225px,50vh,330px);">
         <canvas id="battle-scratch-canvas" style="width:100%;height:100%;display:block;cursor:crosshair;touch-action:none;"></canvas>
-        <div id="battle-scratch-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:rgba(0,0,0,0.08);font-weight:900;pointer-events:none;text-align:center;line-height:1.2;">草稿本</div>
+        <div id="battle-scratch-hint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:rgba(0,0,0,0.08);font-weight:900;pointer-events:none;text-align:center;line-height:1.2;">草稿本，随意涂写</div>
       </div>
       <div id="battle-scratch-controls" style="display:none; gap:12px; width:100%;">
         <button class="battle-ctrl-btn" id="battle-scratch-clear-btn" style="background:rgba(255,200,100,0.2);color:#FFD700;border:2px solid rgba(255,200,100,0.4);">🗑️ 清空草稿</button>
@@ -2071,7 +2071,9 @@ const VoiceMixin = {
     this.recognition.lang = 'zh-CN';
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
-    this.recognition.maxAlternatives = 3;
+    this.recognition.maxAlternatives = 5;
+    // Timestamp when TTS finishes — ignore results that arrive too soon after
+    this._ttsEndTime = 0;
 
     this.recognition.onstart = () => {
       this.recognizing = true;
@@ -2104,6 +2106,8 @@ const VoiceMixin = {
       }
     };
     this.recognition.onresult = (e) => {
+      // Ignore results arriving within 800ms after TTS ends (prevents echo/crosstalk)
+      if (Date.now() - this._ttsEndTime < 800) return;
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const res = e.results[i];
         const transcript = res[0].transcript.trim();
@@ -2136,7 +2140,8 @@ const VoiceMixin = {
     const repeatWords = ['重复','再说一遍','再说一次','听不清','再念一遍','什么','再来'];
     if (repeatWords.some(w => fullText.includes(w))) { this._speakQuestion(); return; }
 
-    const skipWords = ['下一题','跳过','不会','换题','下一个','pass','PASS','算了'];
+    // Expanded skip detection — also catch single character variants
+    const skipWords = ['下一题','跳过','不会','换题','下一个','pass','PASS','算了','跳','换一题','下题'];
     if (skipWords.some(w => fullText.includes(w))) {
       this._playTTS('好的，换下一题！');
       this._cancelRepeatTimer();
@@ -2170,11 +2175,16 @@ const VoiceMixin = {
                    '六十':60,'六十三':63,'六十四':64,
                    '七十':70,'七十二':72,
                    '八十':80,'八十一':81};
+    const keys = Object.keys(cnMap).sort((a,b)=>b.length-a.length);
     for (const t of texts) {
-      const m = t.match(/\d+/g);
-      if (m) { for (const d of m) { const n = parseInt(d); if (!isNaN(n)) return n; } }
-      const keys = Object.keys(cnMap).sort((a,b)=>b.length-a.length);
+      // Try multi-digit arabic number first (e.g. "24", "36")
+      const mMulti = t.match(/\b\d{2,}\b/g);
+      if (mMulti) { for (const d of mMulti) { const n = parseInt(d); if (!isNaN(n)) return n; } }
+      // Try Chinese number words (longest match first)
       for (const k of keys) { if (t.includes(k)) return cnMap[k]; }
+      // Try single digit arabic number last (less specific)
+      const mSingle = t.match(/\d/g);
+      if (mSingle) { for (const d of mSingle) { const n = parseInt(d); if (!isNaN(n)) return n; } }
     }
     return null;
   },
@@ -2201,6 +2211,7 @@ const VoiceMixin = {
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'zh-CN'; utter.rate = 1.1;
+    utter.onend = () => { this._ttsEndTime = Date.now(); };
     window.speechSynthesis.speak(utter);
   },
 
@@ -2209,6 +2220,7 @@ const VoiceMixin = {
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(this.currentQuestion);
     utter.lang = 'zh-CN'; utter.rate = 0.95;
+    utter.onend = () => { this._ttsEndTime = Date.now(); };
     window.speechSynthesis.speak(utter);
   },
 
@@ -2492,6 +2504,12 @@ class Game {
     this._clearCanvas();
     this._setFeedback('', '');
     this.locked = false;
+    // Auto-clear lv1 scratch canvas on new question
+    if (this.mode === 'audio' && this.scratchCtx) {
+      this.scratchCtx.clearRect(0, 0, this.scratchCanvas.width, this.scratchCanvas.height);
+      const hint = document.getElementById('lv1-voice-canvas-hint');
+      if (hint) hint.style.opacity = '1';
+    }
     if (this.mode === 'audio') {
       const opText = op === '×' ? `${a} 乘以 ${b} 等于` : `${a} 除以 ${b} 等于`;
       this.currentQuestion = opText;
@@ -2527,6 +2545,12 @@ class Game {
     this._setFeedback(`✗ 说的是 ${num}，再试试！💪`, 'wrong');
     showAnswerMark('answer-mark', 'wrong', 1200);
     playWrongSound();
+    // Auto-clear lv1 scratch canvas so child can retry
+    if (this.scratchCtx) {
+      this.scratchCtx.clearRect(0, 0, this.scratchCanvas.width, this.scratchCanvas.height);
+      const hint = document.getElementById('lv1-voice-canvas-hint');
+      if (hint) hint.style.opacity = '1';
+    }
   }
 
   _skipQuestion() {
@@ -4437,6 +4461,13 @@ class RaceGame {
     this._clearCanvas();
     this._setFeedback('', '');
     this.locked = false;
+    // Auto-clear race scratch canvas on new question
+    if (this.mode === 'audio') {
+      const sc = document.getElementById('race-scratch-canvas');
+      const sh = document.getElementById('race-scratch-hint');
+      if (sc) { const sctx = sc.getContext('2d'); sctx.clearRect(0,0,sc.width,sc.height); }
+      if (sh) sh.style.opacity = '1';
+    }
     if (this.mode === 'audio') {
       setTimeout(() => {
         if (!this.gameEnded && !this.locked) {
@@ -4467,6 +4498,11 @@ class RaceGame {
     this._setFeedback(`✗ 说的是 ${num}，原地不动 💪`, 'wrong');
     showAnswerMark('answer-mark', 'wrong', 900);
     playWrongSound();
+    // Auto-clear race scratch canvas on wrong answer
+    const sc = document.getElementById('race-scratch-canvas');
+    const sh = document.getElementById('race-scratch-hint');
+    if (sc) { const sctx = sc.getContext('2d'); sctx.clearRect(0,0,sc.width,sc.height); }
+    if (sh) sh.style.opacity = '1';
   }
 
   _setFeedback(msg, type) {
@@ -4819,7 +4855,7 @@ class VoiceGame {
     }
 
     // Check for skip command
-    const skipWords = ['下一题','跳过','不会','换题','下一个','pass','PASS','算了'];
+    const skipWords = ['下一题','跳过','不会','换题','下一个','pass','PASS','算了','跳','换一题','下题'];
     if (skipWords.some(w => fullText.includes(w))) {
       this._playTTS('好的，换下一题！');
       this._skipQuestion();
@@ -4876,15 +4912,13 @@ class VoiceGame {
                    '六十':60,'六十三':63,'六十四':64,
                    '七十':70,'七十二':72,
                    '八十':80,'八十一':81};
+    const keys = Object.keys(cnMap).sort((a,b)=>b.length-a.length);
     for (const t of texts) {
-      // Try Arabic digits first
-      const m = t.match(/\d+/g);
-      if (m) {
-        for (const d of m) { const n = parseInt(d); if (!isNaN(n)) return n; }
-      }
-      // Try Chinese number words (longest match first)
-      const keys = Object.keys(cnMap).sort((a,b)=>b.length-a.length);
+      const mMulti = t.match(/\b\d{2,}\b/g);
+      if (mMulti) { for (const d of mMulti) { const n = parseInt(d); if (!isNaN(n)) return n; } }
       for (const k of keys) { if (t.includes(k)) return cnMap[k]; }
+      const mSingle = t.match(/\d/g);
+      if (mSingle) { for (const d of mSingle) { const n = parseInt(d); if (!isNaN(n)) return n; } }
     }
     return null;
   }
@@ -4915,6 +4949,7 @@ class VoiceGame {
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'zh-CN';
     utter.rate = 1.1;
+    utter.onend = () => { if (this._ttsEndTime !== undefined) this._ttsEndTime = Date.now(); };
     window.speechSynthesis.speak(utter);
   }
 
@@ -4925,6 +4960,7 @@ class VoiceGame {
     const utter = new SpeechSynthesisUtterance(this.currentQuestion);
     utter.lang = 'zh-CN';
     utter.rate = 0.95;
+    utter.onend = () => { if (this._ttsEndTime !== undefined) this._ttsEndTime = Date.now(); };
     window.speechSynthesis.speak(utter);
   }
 
@@ -5013,6 +5049,9 @@ class VoiceGame {
     this._setFeedback('', '');
     document.getElementById('voice-heard-text').textContent = '';
     document.getElementById('voice-status-text').textContent = '正在聆听...';
+    // Auto-clear lv2 scratch canvas on new question
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    document.getElementById('voice-canvas-hint').style.opacity = '1';
     // Speak question then start listening
     setTimeout(() => {
       if (this.gameEnded || this.locked) return;
@@ -5383,6 +5422,13 @@ class BattleGame {
     this._clearCanvas();
     this._setFeedback('', '');
     this.locked = false;
+    // Auto-clear battle scratch canvas on new question
+    if (this.mode === 'audio') {
+      const sc = document.getElementById('battle-scratch-canvas');
+      const sh = document.getElementById('battle-scratch-hint');
+      if (sc) { const sctx = sc.getContext('2d'); sctx.clearRect(0,0,sc.width,sc.height); }
+      if (sh) sh.style.opacity = '1';
+    }
     if (this.mode === 'audio') {
       setTimeout(() => {
         if (!this.gameEnded && !this.locked) {
@@ -5415,6 +5461,11 @@ class BattleGame {
     showAnswerMark('battle-answer-mark', 'wrong', 900);
     playWrongSound();
     this._monsterFireBreath();
+    // Auto-clear battle scratch canvas on wrong answer
+    const sc = document.getElementById('battle-scratch-canvas');
+    const sh = document.getElementById('battle-scratch-hint');
+    if (sc) { const sctx = sc.getContext('2d'); sctx.clearRect(0,0,sc.width,sc.height); }
+    if (sh) sh.style.opacity = '1';
   }
 
   _setFeedback(msg, type) {

@@ -1773,7 +1773,7 @@ function playMonsterScoreSound() {
       osc.type = 'sine'; osc.frequency.value = fromHz;
       osc.frequency.exponentialRampToValueAtTime(toHz, ac.currentTime + delay + dur);
       gain.gain.setValueAtTime(0, ac.currentTime + delay);
-      gain.gain.linearRampToValueAtTime(0.45, ac.currentTime + delay + 0.015);
+      gain.gain.linearRampToValueAtTime(0.8, ac.currentTime + delay + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + delay + dur);
       osc.start(ac.currentTime + delay); osc.stop(ac.currentTime + delay + dur + 0.01);
     });

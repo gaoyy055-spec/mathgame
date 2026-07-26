@@ -1765,16 +1765,17 @@ const BGM = (() => {
 function playMonsterScoreSound() {
   try {
     const ac = new (window.AudioContext || window.webkitAudioContext)();
-    // Two-note "uh-oh" descending tone for urgency
-    [[120, 85, 0], [80, 55, 0.14]].forEach(([from, to, delay]) => {
+    // Heartbeat-style double-thump (lub-dub)
+    [[0, 0.06, 90, 50], [0.12, 0.08, 75, 40]].forEach(([delay, dur, fromHz, toHz]) => {
       const osc = ac.createOscillator();
       const gain = ac.createGain();
       osc.connect(gain); gain.connect(ac.destination);
-      osc.type = 'sawtooth'; osc.frequency.value = from;
-      osc.frequency.exponentialRampToValueAtTime(to, ac.currentTime + delay + 0.16);
-      gain.gain.setValueAtTime(0.35, ac.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + delay + 0.22);
-      osc.start(ac.currentTime + delay); osc.stop(ac.currentTime + delay + 0.26);
+      osc.type = 'sine'; osc.frequency.value = fromHz;
+      osc.frequency.exponentialRampToValueAtTime(toHz, ac.currentTime + delay + dur);
+      gain.gain.setValueAtTime(0, ac.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(0.45, ac.currentTime + delay + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + delay + dur);
+      osc.start(ac.currentTime + delay); osc.stop(ac.currentTime + delay + dur + 0.01);
     });
   } catch(e) {}
 }
@@ -2469,31 +2470,29 @@ class Game {
   nextQuestion() {
     let a, b, op, answer;
     const lv = this.level;
-
-    if (lv === 1) {
-      // 1~6 乘法
-      a = Math.ceil(Math.random()*6); b = Math.ceil(Math.random()*6);
-      op = '×'; answer = a * b;
-    } else if (lv === 2) {
-      // 1~6 除法: divisor 1~6, quotient 1~6
-      b = Math.ceil(Math.random()*6); answer = Math.ceil(Math.random()*6);
-      a = b * answer; op = '÷';
-    } else if (lv === 3) {
-      // 7~9 乘法
-      a = Math.floor(Math.random()*3)+7; b = Math.floor(Math.random()*3)+7;
-      op = '×'; answer = a * b;
-    } else if (lv === 4) {
-      // 7~9 除法: divisor 7~9, quotient 1~9
-      b = Math.floor(Math.random()*3)+7; answer = Math.ceil(Math.random()*9);
-      a = b * answer; op = '÷';
-    } else {
-      // 总复习: random level 1~4
-      const sub = Math.floor(Math.random()*4)+1;
-      if (sub === 1) { a=Math.ceil(Math.random()*6); b=Math.ceil(Math.random()*6); op='×'; answer=a*b; }
-      else if (sub === 2) { b=Math.ceil(Math.random()*6); answer=Math.ceil(Math.random()*6); a=b*answer; op='÷'; }
-      else if (sub === 3) { a=Math.floor(Math.random()*3)+7; b=Math.floor(Math.random()*3)+7; op='×'; answer=a*b; }
-      else { b=Math.floor(Math.random()*3)+7; answer=Math.ceil(Math.random()*9); a=b*answer; op='÷'; }
-    }
+    let attempts = 0;
+    do {
+      if (lv === 1) {
+        a = Math.ceil(Math.random()*6); b = Math.ceil(Math.random()*6);
+        op = '×'; answer = a * b;
+      } else if (lv === 2) {
+        b = Math.ceil(Math.random()*6); answer = Math.ceil(Math.random()*6);
+        a = b * answer; op = '÷';
+      } else if (lv === 3) {
+        a = Math.floor(Math.random()*3)+7; b = Math.floor(Math.random()*3)+7;
+        op = '×'; answer = a * b;
+      } else if (lv === 4) {
+        b = Math.floor(Math.random()*3)+7; answer = Math.ceil(Math.random()*9);
+        a = b * answer; op = '÷';
+      } else {
+        const sub = Math.floor(Math.random()*4)+1;
+        if (sub === 1) { a=Math.ceil(Math.random()*6); b=Math.ceil(Math.random()*6); op='×'; answer=a*b; }
+        else if (sub === 2) { b=Math.ceil(Math.random()*6); answer=Math.ceil(Math.random()*6); a=b*answer; op='÷'; }
+        else if (sub === 3) { a=Math.floor(Math.random()*3)+7; b=Math.floor(Math.random()*3)+7; op='×'; answer=a*b; }
+        else { b=Math.floor(Math.random()*3)+7; answer=Math.ceil(Math.random()*9); a=b*answer; op='÷'; }
+      }
+      attempts++;
+    } while (answer === this.currentAnswer && attempts < 5);
 
     this.currentAnswer = answer;
     const el = document.getElementById('question-display');
@@ -2878,9 +2877,13 @@ class SpaceGame {
   }
 
   _genQuestion() {
-    // 7~9 division
-    const b = Math.floor(Math.random() * 3) + 7;
-    const ans = Math.ceil(Math.random() * 9);
+    // 7~9 division — avoid repeating the same answer as last time
+    let b, ans, attempts = 0;
+    do {
+      b = Math.floor(Math.random() * 3) + 7;
+      ans = Math.ceil(Math.random() * 9);
+      attempts++;
+    } while (ans === this.currentAnswer && attempts < 5);
     const a = b * ans;
     this.currentAnswer = ans;
     this.currentQuestion = `${a} 除以 ${b} 等于`;
@@ -4448,9 +4451,13 @@ class RaceGame {
   }
 
   nextQuestion() {
-    // Level 3: 7~9 multiplication (RaceGame marker)
-    const a = Math.floor(Math.random()*3)+7;
-    const b = Math.floor(Math.random()*3)+7;
+    // Level 3: 7~9 multiplication — avoid same answer as last time
+    let a, b, attempts = 0;
+    do {
+      a = Math.floor(Math.random()*3)+7;
+      b = Math.floor(Math.random()*3)+7;
+      attempts++;
+    } while (a * b === this.currentAnswer && attempts < 5);
     this.currentAnswer = a * b;
     this.currentQuestion = `${a} 乘以 ${b} 等于`;
     const el = document.getElementById('question-display');
@@ -5012,29 +5019,32 @@ class VoiceGame {
     this.locked = false;
     this._cancelRepeatTimer();
 
-    // Generate question based on level (mirrors Game.nextQuestion logic)
-    let a, b, op, ans;
+    // Generate question — avoid same answer as last time
+    let a, b, op, ans, attempts = 0;
     const lv = this.level;
-    if (lv === 1) {
-      a = Math.ceil(Math.random()*6); b = Math.ceil(Math.random()*6);
-      op = '×'; ans = a * b;
-    } else if (lv === 2) {
-      b = Math.ceil(Math.random()*6); ans = Math.ceil(Math.random()*6);
-      a = b * ans; op = '÷';
-    } else if (lv === 3) {
-      a = Math.floor(Math.random()*3)+7; b = Math.floor(Math.random()*3)+7;
-      op = '×'; ans = a * b;
-    } else if (lv === 4) {
-      b = Math.floor(Math.random()*3)+7; ans = Math.ceil(Math.random()*9);
-      a = b * ans; op = '÷';
-    } else {
-      // Level 5: mixed review
-      const sub = Math.floor(Math.random()*4)+1;
-      if (sub === 1) { a=Math.ceil(Math.random()*6); b=Math.ceil(Math.random()*6); op='×'; ans=a*b; }
-      else if (sub === 2) { b=Math.ceil(Math.random()*6); ans=Math.ceil(Math.random()*6); a=b*ans; op='÷'; }
-      else if (sub === 3) { a=Math.floor(Math.random()*3)+7; b=Math.floor(Math.random()*3)+7; op='×'; ans=a*b; }
-      else { b=Math.floor(Math.random()*3)+7; ans=Math.ceil(Math.random()*9); a=b*ans; op='÷'; }
-    }
+    const prevAnswer = this.currentAnswer;
+    do {
+      if (lv === 1) {
+        a = Math.ceil(Math.random()*6); b = Math.ceil(Math.random()*6);
+        op = '×'; ans = a * b;
+      } else if (lv === 2) {
+        b = Math.ceil(Math.random()*6); ans = Math.ceil(Math.random()*6);
+        a = b * ans; op = '÷';
+      } else if (lv === 3) {
+        a = Math.floor(Math.random()*3)+7; b = Math.floor(Math.random()*3)+7;
+        op = '×'; ans = a * b;
+      } else if (lv === 4) {
+        b = Math.floor(Math.random()*3)+7; ans = Math.ceil(Math.random()*9);
+        a = b * ans; op = '÷';
+      } else {
+        const sub = Math.floor(Math.random()*4)+1;
+        if (sub === 1) { a=Math.ceil(Math.random()*6); b=Math.ceil(Math.random()*6); op='×'; ans=a*b; }
+        else if (sub === 2) { b=Math.ceil(Math.random()*6); ans=Math.ceil(Math.random()*6); a=b*ans; op='÷'; }
+        else if (sub === 3) { a=Math.floor(Math.random()*3)+7; b=Math.floor(Math.random()*3)+7; op='×'; ans=a*b; }
+        else { b=Math.floor(Math.random()*3)+7; ans=Math.ceil(Math.random()*9); a=b*ans; op='÷'; }
+      }
+      attempts++;
+    } while (ans === prevAnswer && attempts < 5);
 
     this.currentAnswer = ans;
     const opText = op === '×' ? `${a} 乘以 ${b} 等于` : `${a} 除以 ${b} 等于`;
@@ -5405,12 +5415,16 @@ class BattleGame {
   }
 
   nextQuestion() {
-    let a, b, op, answer;
-    const sub = Math.floor(Math.random()*4)+1;
-    if (sub === 1) { a=Math.ceil(Math.random()*6); b=Math.ceil(Math.random()*6); op='×'; answer=a*b; }
-    else if (sub === 2) { b=Math.ceil(Math.random()*6); answer=Math.ceil(Math.random()*6); a=b*answer; op='÷'; }
-    else if (sub === 3) { a=Math.floor(Math.random()*3)+7; b=Math.floor(Math.random()*3)+7; op='×'; answer=a*b; }
-    else { b=Math.floor(Math.random()*3)+7; answer=Math.ceil(Math.random()*9); a=b*answer; op='÷'; }
+    let a, b, op, answer, attempts = 0;
+    const prevAnswer = this.currentAnswer;
+    do {
+      const sub = Math.floor(Math.random()*4)+1;
+      if (sub === 1) { a=Math.ceil(Math.random()*6); b=Math.ceil(Math.random()*6); op='×'; answer=a*b; }
+      else if (sub === 2) { b=Math.ceil(Math.random()*6); answer=Math.ceil(Math.random()*6); a=b*answer; op='÷'; }
+      else if (sub === 3) { a=Math.floor(Math.random()*3)+7; b=Math.floor(Math.random()*3)+7; op='×'; answer=a*b; }
+      else { b=Math.floor(Math.random()*3)+7; answer=Math.ceil(Math.random()*9); a=b*answer; op='÷'; }
+      attempts++;
+    } while (answer === prevAnswer && attempts < 5);
 
     this.currentAnswer = answer;
     this.currentQuestion = op === '×' ? `${a} 乘以 ${b} 等于` : `${a} 除以 ${b} 等于`;

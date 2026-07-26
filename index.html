@@ -3508,7 +3508,7 @@ class SpaceGame {
     document.getElementById('overlay-emoji').textContent = '🚀';
     document.getElementById('overlay-title').textContent = '太空穿越！';
     document.getElementById('overlay-title').className = 'win';
-    document.getElementById('overlay-msg').innerHTML = '飞船穿越了所有屏蔽门！🎉<br>你是宇宙最强口算飞行员！🌌';
+    document.getElementById('overlay-msg').innerHTML = '飞船顺利到达终点！🎉<br>你是宇宙最强口算飞行员！🌌';
     document.getElementById('overlay-sub').textContent = `成功通过 ${SPACE_TOTAL} 道门，真棒！`;
     const nextBtn = document.getElementById('next-level-btn');
     if (this.level < 5) {
@@ -4595,7 +4595,7 @@ class RaceGame {
     const overlay = document.getElementById('overlay');
     overlay.classList.add('show');
     document.getElementById('overlay-emoji').textContent = win ? '🏆' : '😢';
-    document.getElementById('overlay-title').textContent = win ? '冲线啦！！' : '被怪兽超越了...';
+    document.getElementById('overlay-title').textContent = win ? '胜利啦！！' : '被怪兽超越了...';
     document.getElementById('overlay-title').className = win ? 'win' : 'lose';
     if (win) {
       const monsterAlsoFinished = this.monsterStep >= RACE_TOTAL;

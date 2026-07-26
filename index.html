@@ -3505,13 +3505,17 @@ class SpaceGame {
     this._draw(); // final frame
     const overlay = document.getElementById('overlay');
     overlay.classList.add('show');
-    document.getElementById('overlay-emoji').textContent = '🚀';
-    document.getElementById('overlay-title').textContent = '太空穿越！';
-    document.getElementById('overlay-title').className = 'win';
-    document.getElementById('overlay-msg').innerHTML = '飞船顺利到达终点！🎉<br>你是宇宙最强口算飞行员！🌌';
-    document.getElementById('overlay-sub').textContent = `成功通过 ${SPACE_TOTAL} 道门，真棒！`;
+    document.getElementById('overlay-emoji').textContent = won ? '🚀' : '😢';
+    document.getElementById('overlay-title').textContent = won ? '太空穿越！' : '飞船迷路了...';
+    document.getElementById('overlay-title').className = won ? 'win' : 'lose';
+    document.getElementById('overlay-msg').innerHTML = won
+      ? '飞船顺利到达终点！🎉<br>你是宇宙最强口算飞行员！🌌'
+      : '没能穿越所有屏蔽门…<br>再试一次，下次一定能到达终点！💪';
+    document.getElementById('overlay-sub').textContent = won
+      ? `成功通过 ${SPACE_TOTAL} 道门，真棒！`
+      : `通过了 ${this.done} / ${SPACE_TOTAL} 道门，加油！`;
     const nextBtn = document.getElementById('next-level-btn');
-    if (this.level < 5) {
+    if (won && this.level < 5) {
       const completedLevel4 = parseInt(localStorage.getItem('mathgameMaxCompletedLevel') || '0', 10);
       if (this.level > (Number.isFinite(completedLevel4) ? completedLevel4 : 0)) {
         localStorage.setItem('mathgameMaxCompletedLevel', this.level);
@@ -3524,7 +3528,7 @@ class SpaceGame {
     }
     const oc = document.getElementById('overlay-canvas');
     oc.width = window.innerWidth; oc.height = window.innerHeight;
-    this._playWinAnim(oc);
+    if (won) this._playWinAnim(oc);
   }
 
   _forceEnd() {

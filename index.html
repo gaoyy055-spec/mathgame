@@ -2905,6 +2905,10 @@ class SpaceGame {
   }
 
   _voiceOnCorrect() {
+    // Find the correct door and trigger _choose for consistent animation
+    const door = this.choices.find(d => d.value === this.currentAnswer);
+    if (door) { this._choose(door); return; }
+    // Fallback (should not happen)
     this.done++;
     this._updateHeader();
     this.targetShipX = this.done / SPACE_TOTAL;
@@ -2921,6 +2925,10 @@ class SpaceGame {
   }
 
   _voiceOnWrong(num) {
+    // Find the door matching the spoken number and trigger _choose for flash animation
+    const door = this.choices.find(d => d.value === num);
+    if (door) { this._choose(door); return; }
+    // No matching door — just show feedback without locking
     this._showFeedback(`✗ 说的是 ${num}，再想想！`, 'wrong');
     showAnswerMark('space-answer-mark', 'wrong', 900);
     playWrongSound();

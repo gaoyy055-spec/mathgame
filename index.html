@@ -2249,7 +2249,7 @@ const VoiceMixin = {
 
 const TOTAL = 10;
 const MONSTER_SPEED = 5000; // ms per question
-const AUTO_SUBMIT_DELAY = 300; // ms after pen lifts
+const AUTO_SUBMIT_DELAY = 1000; // ms after pen lifts
 
 class Game {
   constructor(level = 1, mode = 'visual', recognizer = null) {
@@ -5207,7 +5207,7 @@ class VoiceGame {
 // ===== LEVEL 5 BATTLE GAME =====
 const BATTLE_TOTAL = 20;
 const BATTLE_TIME = 90;
-const BATTLE_AUTO_SUBMIT = 600;
+const BATTLE_AUTO_SUBMIT = 1000;
 
 class BattleGame {
   constructor(mode = 'visual', recognizer = null) {

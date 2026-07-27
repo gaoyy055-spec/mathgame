@@ -2247,10 +2247,8 @@ const VoiceMixin = {
 };
 
 const TOTAL = 10;
-const MONSTER_SPEED = 5000; // ms per question (1-digit answers)
-const MONSTER_SPEED_2DIGIT = 6000; // ms per question (2-digit answers)
-const AUTO_SUBMIT_DELAY = 500; // ms after pen lifts (1-digit)
-const AUTO_SUBMIT_DELAY_2DIGIT = 800; // ms after pen lifts (2-digit)
+const MONSTER_SPEED = 5000; // ms per question
+const AUTO_SUBMIT_DELAY = 600; // ms after pen lifts
 
 class Game {
   constructor(level = 1, mode = 'visual', recognizer = null) {
@@ -2421,12 +2419,11 @@ class Game {
   }
 
   _scheduleAutoSubmit() {
-    const delay = this.currentAnswer >= 10 ? AUTO_SUBMIT_DELAY_2DIGIT : AUTO_SUBMIT_DELAY;
     const arc = document.getElementById('timer-arc');
     const ring = document.getElementById('timer-ring');
     ring.style.opacity = '1';
     let progress = 0;
-    const totalFrames = delay / 16;
+    const totalFrames = AUTO_SUBMIT_DELAY / 16;
     this.timerAnim = setInterval(() => {
       progress++;
       const offset = 82 - (82 * progress / totalFrames);
@@ -2437,7 +2434,7 @@ class Game {
       ring.style.opacity = '0';
       arc.setAttribute('stroke-dashoffset', '82');
       await this._submit();
-    }, delay);
+    }, AUTO_SUBMIT_DELAY);
   }
 
   _cancelAutoSubmit() {
@@ -2597,37 +2594,31 @@ class Game {
   }
 
   _startMonster() {
-    const scheduleNext = () => {
-      if (this.gameEnded || this.monsterScore >= TOTAL) return;
-      const speed = this.currentAnswer >= 10 ? MONSTER_SPEED_2DIGIT : MONSTER_SPEED;
-      this.monsterTimer = setTimeout(() => {
-        if (this.gameEnded) return;
-        if (this.monsterScore >= TOTAL) return; // already full
-        this.monsterScore++;
-        this._fillDot('m', this.monsterScore-1);
-        playMonsterScoreSound();
-        if (this.monsterScore > this.playerScore) {
-          document.getElementById('monster-wrap').classList.add('winning');
-          setDangerBorder(true);
-        } else {
-          document.getElementById('monster-wrap').classList.remove('winning');
-          setDangerBorder(false);
-        }
-        if (this.monsterScore >= TOTAL) {
-          this.monsterFinished = true;
-          document.getElementById('monster-full-banner').style.display = 'block';
-          // 怪兽答完10题，游戏继续，等待玩家完成10题
-        } else {
-          scheduleNext();
-        }
-      }, speed);
-    };
-    scheduleNext();
+    this.monsterTimer = setInterval(() => {
+      if (this.gameEnded) return;
+      if (this.monsterScore >= TOTAL) return; // already full
+      this.monsterScore++;
+      this._fillDot('m', this.monsterScore-1);
+      playMonsterScoreSound();
+      if (this.monsterScore > this.playerScore) {
+        document.getElementById('monster-wrap').classList.add('winning');
+        setDangerBorder(true);
+      } else {
+        document.getElementById('monster-wrap').classList.remove('winning');
+        setDangerBorder(false);
+      }
+      if (this.monsterScore >= TOTAL) {
+        this.monsterFinished = true;
+        clearInterval(this.monsterTimer);
+        document.getElementById('monster-full-banner').style.display = 'block';
+        // 怪兽答完10题，游戏继续，等待玩家完成10题
+      }
+    }, MONSTER_SPEED);
   }
 
   _forceEnd() {
     this.gameEnded = true;
-    clearTimeout(this.monsterTimer);
+    clearInterval(this.monsterTimer);
     if (this.mode === 'audio') this._voiceMixinDestroy();
     else this._cancelAutoSubmit();
     window.location.href = 'menu.html';
@@ -2635,7 +2626,7 @@ class Game {
 
   _endGame() {
     this.gameEnded = true;
-    clearTimeout(this.monsterTimer);
+    clearInterval(this.monsterTimer);
     this._cancelAutoSubmit();
     setDangerBorder(false);
     // 玩家答完10题才结束；怪兽先答完则玩家输，否则赢
@@ -3592,8 +3583,7 @@ class SpaceGame {
 
 // ===== LEVEL 3 RACE GAME =====
 const RACE_TOTAL = 10; // segments
-const RACE_MONSTER_SPEED = 5000; // ms per step (1-digit answers)
-const RACE_MONSTER_SPEED_2DIGIT = 6000; // ms per step (2-digit answers)
+const RACE_MONSTER_SPEED = 5000; // ms per step
 
 Object.assign(SpaceGame.prototype, VoiceMixin);
 
@@ -4431,12 +4421,11 @@ class RaceGame {
   }
 
   _scheduleAutoSubmit() {
-    const delay = this.currentAnswer >= 10 ? AUTO_SUBMIT_DELAY_2DIGIT : AUTO_SUBMIT_DELAY;
     const arc = document.getElementById('timer-arc');
     const ring = document.getElementById('timer-ring');
     ring.style.opacity = '1';
     let progress = 0;
-    const totalFrames = delay / 16;
+    const totalFrames = AUTO_SUBMIT_DELAY / 16;
     this.timerAnim = setInterval(() => {
       progress++;
       const offset = 82 - (82 * progress / totalFrames);
@@ -4447,7 +4436,7 @@ class RaceGame {
       ring.style.opacity = '0';
       arc.setAttribute('stroke-dashoffset', '82');
       await this._submit();
-    }, delay);
+    }, AUTO_SUBMIT_DELAY);
   }
 
   _cancelAutoSubmit() {
@@ -4568,31 +4557,25 @@ class RaceGame {
   }
 
   _startMonster() {
-    const scheduleNext = () => {
-      if (this.gameEnded || this.monsterStep >= RACE_TOTAL) return;
-      const speed = this.currentAnswer >= 10 ? RACE_MONSTER_SPEED_2DIGIT : RACE_MONSTER_SPEED;
-      this.monsterTimer = setTimeout(() => {
-        if (this.gameEnded) return;
-        if (this.monsterStep >= RACE_TOTAL) return;
-        this.monsterStep = Math.min(this.monsterStep + 1, RACE_TOTAL);
-        this._updateRaceTrack();
-        playMonsterScoreSound();
-        if (this.monsterStep > this.playerStep) setDangerBorder(true);
-        if (this.monsterStep >= RACE_TOTAL) {
-          this.monsterFinished = true;
-          document.getElementById('monster-full-banner').style.display = 'block';
-          // 怪兽先到终点，游戏继续，等待玩家完成
-        } else {
-          scheduleNext();
-        }
-      }, speed);
-    };
-    scheduleNext();
+    this.monsterTimer = setInterval(() => {
+      if (this.gameEnded) return;
+      if (this.monsterStep >= RACE_TOTAL) return;
+      this.monsterStep = Math.min(this.monsterStep + 1, RACE_TOTAL);
+      this._updateRaceTrack();
+      playMonsterScoreSound();
+      if (this.monsterStep > this.playerStep) setDangerBorder(true);
+      if (this.monsterStep >= RACE_TOTAL) {
+        this.monsterFinished = true;
+        clearInterval(this.monsterTimer);
+        document.getElementById('monster-full-banner').style.display = 'block';
+        // 怪兽先到终点，游戏继续，等待玩家完成
+      }
+    }, RACE_MONSTER_SPEED);
   }
 
   _forceEnd() {
     this.gameEnded = true;
-    clearTimeout(this.monsterTimer);
+    clearInterval(this.monsterTimer);
     if (this.mode === 'audio') this._voiceMixinDestroy();
     else this._cancelAutoSubmit();
     document.getElementById('race-section').classList.remove('active');
@@ -4603,7 +4586,7 @@ class RaceGame {
   _endGame(playerWon) {
     if (this.gameEnded) return;
     this.gameEnded = true;
-    clearTimeout(this.monsterTimer);
+    clearInterval(this.monsterTimer);
     this._cancelAutoSubmit();
     setDangerBorder(false);
     // 若未传参，则依据怪兽是否先到终点判定
@@ -5101,39 +5084,33 @@ class VoiceGame {
   }
 
   _startMonster() {
-    const scheduleNext = () => {
-      if (this.gameEnded || this.monsterScore >= TOTAL) return;
-      const speed = this.currentAnswer >= 10 ? MONSTER_SPEED_2DIGIT : MONSTER_SPEED;
-      this.monsterTimer = setTimeout(() => {
-        if (this.gameEnded) return;
-        if (this.monsterScore >= TOTAL) return;
-        this.monsterScore++;
-        this._fillDot('m', this.monsterScore-1);
-        playMonsterScoreSound();
-        if (this.monsterScore > this.playerScore) {
-          document.getElementById('monster-wrap').classList.add('winning');
-          setDangerBorder(true);
-        } else {
-          document.getElementById('monster-wrap').classList.remove('winning');
-          setDangerBorder(false);
-        }
-        if (this.monsterScore >= TOTAL) {
-          this.monsterFinished = true;
-          document.getElementById('monster-full-banner').style.display = 'block';
-          // 怪兽答完10题，游戏继续，等待玩家完成10题
-        } else {
-          scheduleNext();
-        }
-      }, speed);
-    };
-    scheduleNext();
+    this.monsterTimer = setInterval(() => {
+      if (this.gameEnded) return;
+      if (this.monsterScore >= TOTAL) return;
+      this.monsterScore++;
+      this._fillDot('m', this.monsterScore-1);
+      playMonsterScoreSound();
+      if (this.monsterScore > this.playerScore) {
+        document.getElementById('monster-wrap').classList.add('winning');
+        setDangerBorder(true);
+      } else {
+        document.getElementById('monster-wrap').classList.remove('winning');
+        setDangerBorder(false);
+      }
+      if (this.monsterScore >= TOTAL) {
+        this.monsterFinished = true;
+        clearInterval(this.monsterTimer);
+        document.getElementById('monster-full-banner').style.display = 'block';
+        // 怪兽答完10题，游戏继续，等待玩家完成10题
+      }
+    }, MONSTER_SPEED);
   }
 
   _forceEnd() {
     this.gameEnded = true;
     this._cancelRepeatTimer();
     this._stopVoice();
-    clearTimeout(this.monsterTimer);
+    clearInterval(this.monsterTimer);
     window.location.href = 'menu.html';
   }
 
@@ -5141,7 +5118,7 @@ class VoiceGame {
     this.gameEnded = true;
     this._cancelRepeatTimer();
     this._stopVoice();
-    clearTimeout(this.monsterTimer);
+    clearInterval(this.monsterTimer);
     setDangerBorder(false);
     // 玩家先答完10题才算赢；怪兽先答完则输
     const playerWon = !this.monsterFinished;
@@ -5229,8 +5206,7 @@ class VoiceGame {
 // ===== LEVEL 5 BATTLE GAME =====
 const BATTLE_TOTAL = 20;
 const BATTLE_TIME = 90;
-const BATTLE_AUTO_SUBMIT = 500;
-const BATTLE_AUTO_SUBMIT_2DIGIT = 800;
+const BATTLE_AUTO_SUBMIT = 600;
 
 class BattleGame {
   constructor(mode = 'visual', recognizer = null) {
@@ -5524,12 +5500,11 @@ class BattleGame {
   }
 
   _scheduleAutoSubmit() {
-    const delay = this.currentAnswer >= 10 ? BATTLE_AUTO_SUBMIT_2DIGIT : BATTLE_AUTO_SUBMIT;
     const arc = document.getElementById('battle-timer-arc');
     const ring = document.getElementById('battle-timer-ring');
     ring.style.opacity = '1';
     let progress = 0;
-    const totalFrames = delay / 16;
+    const totalFrames = BATTLE_AUTO_SUBMIT / 16;
     this.timerAnim = setInterval(() => {
       progress++;
       arc.setAttribute('stroke-dashoffset', (82 - 82*progress/totalFrames).toFixed(1));
@@ -5539,7 +5514,7 @@ class BattleGame {
       ring.style.opacity = '0';
       arc.setAttribute('stroke-dashoffset', '82');
       await this._submit();
-    }, delay);
+    }, BATTLE_AUTO_SUBMIT);
   }
 
   _cancelAutoSubmit() {

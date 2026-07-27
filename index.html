@@ -2248,7 +2248,7 @@ const VoiceMixin = {
 
 const TOTAL = 10;
 const MONSTER_SPEED = 5000; // ms per question
-const AUTO_SUBMIT_DELAY = 600; // ms after pen lifts
+const AUTO_SUBMIT_DELAY = 500; // ms after pen lifts (non-prefix / 1-digit answer)
 const AUTO_SUBMIT_DELAY_PREFIX = 1000; // ms when OCR sees a prefix of the answer
 
 class Game {
@@ -5223,7 +5223,7 @@ class VoiceGame {
 // ===== LEVEL 5 BATTLE GAME =====
 const BATTLE_TOTAL = 20;
 const BATTLE_TIME = 90;
-const BATTLE_AUTO_SUBMIT = 600;
+const BATTLE_AUTO_SUBMIT = 500;
 const BATTLE_AUTO_SUBMIT_PREFIX = 1000;
 
 class BattleGame {

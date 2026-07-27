@@ -7,7 +7,7 @@
     { "src": "/", "dest": "/menu.html" },
     {
       "src": "/api/ocr",
-      "dest": "https://smithsonian-doctors-tales-checked.trycloudflare.com/ocr"
+      "dest": "https://needed-channels-spirituality-exactly.trycloudflare.com/ocr"
     },
     { "src": "/(.*)", "dest": "/$1" }
   ]

@@ -2247,7 +2247,8 @@ const VoiceMixin = {
 };
 
 const TOTAL = 10;
-const MONSTER_SPEED = 5000; // ms per question
+const MONSTER_SPEED = 5000; // ms per question (1-digit answer)
+const MONSTER_SPEED_2DIGIT = 6000; // ms per question (2-digit answer)
 const AUTO_SUBMIT_DELAY = 500; // ms after pen lifts (non-prefix / 1-digit answer)
 const AUTO_SUBMIT_DELAY_PREFIX = 1000; // ms when OCR sees a prefix of the answer
 
@@ -2606,6 +2607,7 @@ class Game {
   }
 
   _startMonster() {
+    const speed = this.currentAnswer >= 10 ? MONSTER_SPEED_2DIGIT : MONSTER_SPEED;
     this.monsterTimer = setInterval(() => {
       if (this.gameEnded) return;
       if (this.monsterScore >= TOTAL) return; // already full
@@ -2625,7 +2627,7 @@ class Game {
         document.getElementById('monster-full-banner').style.display = 'block';
         // 怪兽答完10题，游戏继续，等待玩家完成10题
       }
-    }, MONSTER_SPEED);
+    }, speed);
   }
 
   _forceEnd() {
@@ -3595,7 +3597,8 @@ class SpaceGame {
 
 // ===== LEVEL 3 RACE GAME =====
 const RACE_TOTAL = 10; // segments
-const RACE_MONSTER_SPEED = 5000; // ms per step
+const RACE_MONSTER_SPEED = 5000; // ms per step (1-digit answer)
+const RACE_MONSTER_SPEED_2DIGIT = 6000; // ms per step (2-digit answer)
 
 Object.assign(SpaceGame.prototype, VoiceMixin);
 
@@ -4580,6 +4583,7 @@ class RaceGame {
   }
 
   _startMonster() {
+    const speed = this.currentAnswer >= 10 ? RACE_MONSTER_SPEED_2DIGIT : RACE_MONSTER_SPEED;
     this.monsterTimer = setInterval(() => {
       if (this.gameEnded) return;
       if (this.monsterStep >= RACE_TOTAL) return;
@@ -4593,7 +4597,7 @@ class RaceGame {
         document.getElementById('monster-full-banner').style.display = 'block';
         // 怪兽先到终点，游戏继续，等待玩家完成
       }
-    }, RACE_MONSTER_SPEED);
+    }, speed);
   }
 
   _forceEnd() {
@@ -5107,6 +5111,7 @@ class VoiceGame {
   }
 
   _startMonster() {
+    const speed = this.currentAnswer >= 10 ? MONSTER_SPEED_2DIGIT : MONSTER_SPEED;
     this.monsterTimer = setInterval(() => {
       if (this.gameEnded) return;
       if (this.monsterScore >= TOTAL) return;
@@ -5126,7 +5131,7 @@ class VoiceGame {
         document.getElementById('monster-full-banner').style.display = 'block';
         // 怪兽答完10题，游戏继续，等待玩家完成10题
       }
-    }, MONSTER_SPEED);
+    }, speed);
   }
 
   _forceEnd() {

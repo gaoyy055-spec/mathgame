@@ -2249,6 +2249,7 @@ const VoiceMixin = {
 const TOTAL = 10;
 const MONSTER_SPEED = 5000; // ms per question
 const AUTO_SUBMIT_DELAY = 600; // ms after pen lifts
+const AUTO_SUBMIT_DELAY_PREFIX = 1000; // ms when OCR sees a prefix of the answer
 
 class Game {
   constructor(level = 1, mode = 'visual', recognizer = null) {
@@ -2422,19 +2423,27 @@ class Game {
     const arc = document.getElementById('timer-arc');
     const ring = document.getElementById('timer-ring');
     ring.style.opacity = '1';
-    let progress = 0;
-    const totalFrames = AUTO_SUBMIT_DELAY / 16;
-    this.timerAnim = setInterval(() => {
-      progress++;
-      const offset = 82 - (82 * progress / totalFrames);
-      arc.setAttribute('stroke-dashoffset', offset.toFixed(1));
-    }, 16);
-    this.submitTimer = setTimeout(async () => {
-      clearInterval(this.timerAnim);
-      ring.style.opacity = '0';
-      arc.setAttribute('stroke-dashoffset', '82');
-      await this._submit();
-    }, AUTO_SUBMIT_DELAY);
+    // Quick OCR peek: if result is a leading prefix of the answer, give extra time
+    this.recognizer.recognize(this.canvas).then(peek => {
+      if (this.gameEnded || this.locked || !this.hasContent) return;
+      const ans = String(this.currentAnswer);
+      const isPrefix = peek !== null && peek !== this.currentAnswer &&
+                       ans.startsWith(String(peek)) && String(peek).length < ans.length;
+      const delay = isPrefix ? AUTO_SUBMIT_DELAY_PREFIX : AUTO_SUBMIT_DELAY;
+      let progress = 0;
+      const totalFrames = delay / 16;
+      this.timerAnim = setInterval(() => {
+        progress++;
+        const offset = 82 - (82 * progress / totalFrames);
+        arc.setAttribute('stroke-dashoffset', offset.toFixed(1));
+      }, 16);
+      this.submitTimer = setTimeout(async () => {
+        clearInterval(this.timerAnim);
+        ring.style.opacity = '0';
+        arc.setAttribute('stroke-dashoffset', '82');
+        await this._submit();
+      }, delay);
+    });
   }
 
   _cancelAutoSubmit() {
@@ -4424,19 +4433,27 @@ class RaceGame {
     const arc = document.getElementById('timer-arc');
     const ring = document.getElementById('timer-ring');
     ring.style.opacity = '1';
-    let progress = 0;
-    const totalFrames = AUTO_SUBMIT_DELAY / 16;
-    this.timerAnim = setInterval(() => {
-      progress++;
-      const offset = 82 - (82 * progress / totalFrames);
-      arc.setAttribute('stroke-dashoffset', offset.toFixed(1));
-    }, 16);
-    this.submitTimer = setTimeout(async () => {
-      clearInterval(this.timerAnim);
-      ring.style.opacity = '0';
-      arc.setAttribute('stroke-dashoffset', '82');
-      await this._submit();
-    }, AUTO_SUBMIT_DELAY);
+    // Quick OCR peek: if result is a leading prefix of the answer, give extra time
+    this.recognizer.recognize(this.canvas).then(peek => {
+      if (this.gameEnded || this.locked || !this.hasContent) return;
+      const ans = String(this.currentAnswer);
+      const isPrefix = peek !== null && peek !== this.currentAnswer &&
+                       ans.startsWith(String(peek)) && String(peek).length < ans.length;
+      const delay = isPrefix ? AUTO_SUBMIT_DELAY_PREFIX : AUTO_SUBMIT_DELAY;
+      let progress = 0;
+      const totalFrames = delay / 16;
+      this.timerAnim = setInterval(() => {
+        progress++;
+        const offset = 82 - (82 * progress / totalFrames);
+        arc.setAttribute('stroke-dashoffset', offset.toFixed(1));
+      }, 16);
+      this.submitTimer = setTimeout(async () => {
+        clearInterval(this.timerAnim);
+        ring.style.opacity = '0';
+        arc.setAttribute('stroke-dashoffset', '82');
+        await this._submit();
+      }, delay);
+    });
   }
 
   _cancelAutoSubmit() {
@@ -5207,6 +5224,7 @@ class VoiceGame {
 const BATTLE_TOTAL = 20;
 const BATTLE_TIME = 90;
 const BATTLE_AUTO_SUBMIT = 600;
+const BATTLE_AUTO_SUBMIT_PREFIX = 1000;
 
 class BattleGame {
   constructor(mode = 'visual', recognizer = null) {
@@ -5503,18 +5521,26 @@ class BattleGame {
     const arc = document.getElementById('battle-timer-arc');
     const ring = document.getElementById('battle-timer-ring');
     ring.style.opacity = '1';
-    let progress = 0;
-    const totalFrames = BATTLE_AUTO_SUBMIT / 16;
-    this.timerAnim = setInterval(() => {
-      progress++;
-      arc.setAttribute('stroke-dashoffset', (82 - 82*progress/totalFrames).toFixed(1));
-    }, 16);
-    this.submitTimer = setTimeout(async () => {
-      clearInterval(this.timerAnim);
-      ring.style.opacity = '0';
-      arc.setAttribute('stroke-dashoffset', '82');
-      await this._submit();
-    }, BATTLE_AUTO_SUBMIT);
+    const c = document.getElementById('battle-canvas');
+    this.recognizer.recognize(c).then(peek => {
+      if (this.gameEnded || this.locked || !this.hasContent) return;
+      const ans = String(this.currentAnswer);
+      const isPrefix = peek !== null && peek !== this.currentAnswer &&
+                       ans.startsWith(String(peek)) && String(peek).length < ans.length;
+      const delay = isPrefix ? BATTLE_AUTO_SUBMIT_PREFIX : BATTLE_AUTO_SUBMIT;
+      let progress = 0;
+      const totalFrames = delay / 16;
+      this.timerAnim = setInterval(() => {
+        progress++;
+        arc.setAttribute('stroke-dashoffset', (82 - 82*progress/totalFrames).toFixed(1));
+      }, 16);
+      this.submitTimer = setTimeout(async () => {
+        clearInterval(this.timerAnim);
+        ring.style.opacity = '0';
+        arc.setAttribute('stroke-dashoffset', '82');
+        await this._submit();
+      }, delay);
+    });
   }
 
   _cancelAutoSubmit() {

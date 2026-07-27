@@ -2423,9 +2423,12 @@ class Game {
     const arc = document.getElementById('timer-arc');
     const ring = document.getElementById('timer-ring');
     ring.style.opacity = '1';
+    // Capture answer at the moment pen lifts, to detect stale callbacks
+    const expectedAnswer = this.currentAnswer;
     // Quick OCR peek: if result is a leading prefix of the answer, give extra time
     this.recognizer.recognize(this.canvas).then(peek => {
       if (this.gameEnded || this.locked || !this.hasContent) return;
+      if (this.currentAnswer !== expectedAnswer) return; // question changed, discard
       const ans = String(this.currentAnswer);
       const isPrefix = peek !== null && peek !== this.currentAnswer &&
                        ans.startsWith(String(peek)) && String(peek).length < ans.length;
@@ -4433,9 +4436,12 @@ class RaceGame {
     const arc = document.getElementById('timer-arc');
     const ring = document.getElementById('timer-ring');
     ring.style.opacity = '1';
+    // Capture answer at the moment pen lifts, to detect stale callbacks
+    const expectedAnswer = this.currentAnswer;
     // Quick OCR peek: if result is a leading prefix of the answer, give extra time
     this.recognizer.recognize(this.canvas).then(peek => {
       if (this.gameEnded || this.locked || !this.hasContent) return;
+      if (this.currentAnswer !== expectedAnswer) return; // question changed, discard
       const ans = String(this.currentAnswer);
       const isPrefix = peek !== null && peek !== this.currentAnswer &&
                        ans.startsWith(String(peek)) && String(peek).length < ans.length;
@@ -5522,8 +5528,10 @@ class BattleGame {
     const ring = document.getElementById('battle-timer-ring');
     ring.style.opacity = '1';
     const c = document.getElementById('battle-canvas');
+    const expectedAnswer = this.currentAnswer;
     this.recognizer.recognize(c).then(peek => {
       if (this.gameEnded || this.locked || !this.hasContent) return;
+      if (this.currentAnswer !== expectedAnswer) return; // question changed, discard
       const ans = String(this.currentAnswer);
       const isPrefix = peek !== null && peek !== this.currentAnswer &&
                        ans.startsWith(String(peek)) && String(peek).length < ans.length;

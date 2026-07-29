@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <!-- 发光滤镜 -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur1" />
+      <feGaussianBlur stdDeviation="12" result="blur2" />
+      <feGaussianBlur stdDeviation="3" result="blur3" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="blur3" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    
+    <!-- 轻微投影滤镜 -->
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="#241B14" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- 背景天空与模糊遗迹 -->
+  <rect width="600" height="600" fill="#C2E2E6" />
+  <path d="M 0,350 Q 150,330 300,360 T 600,340 L 600,600 L 0,600 Z" fill="#9CC5B5" opacity="0.6"/>
+  <!-- 背景石柱 -->
+  <rect x="50" y="200" width="40" height="200" fill="#A8C0C2" opacity="0.5"/>
+  <rect x="110" y="180" width="40" height="220" fill="#A8C0C2" opacity="0.5"/>
+  <path d="M 40,160 L 160,160 L 160,180 L 40,180 Z" fill="#A8C0C2" opacity="0.5"/>
+
+  <g filter="url(#shadow)">
+    <!-- ================== 手臂与躯干后层 ================== -->
+    <!-- 左侧大臂 (画面左侧，怪兽右手) -->
+    <path d="M 170,290 C 100,290 60,350 50,420 C 40,490 60,560 70,620 L 220,620 C 220,530 200,470 170,410 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    <!-- 左臂分块线 -->
+    <path d="M 50,420 C 100,450 150,440 195,440" fill="none" stroke="#3A2D23" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 65,510 C 120,530 180,510 215,530" fill="none" stroke="#3A2D23" stroke-width="5" stroke-linecap="round"/>
+    
+    <!-- 右侧大臂 (画面右侧，怪兽左手) -->
+    <path d="M 430,290 C 500,290 540,350 550,420 C 560,490 540,560 530,620 L 380,620 C 380,530 400,470 430,410 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    <!-- 右臂分块线 -->
+    <path d="M 550,420 C 500,450 450,440 405,440" fill="none" stroke="#3A2D23" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 535,510 C 480,530 420,510 385,530" fill="none" stroke="#3A2D23" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- 腹部底层 -->
+    <path d="M 180,480 C 180,550 220,620 220,620 L 380,620 C 380,620 420,550 420,480 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+
+    <!-- ================== 身体主块面 ================== -->
+    <!-- 颈部基座 -->
+    <path d="M 220,290 C 270,330 330,330 380,290 C 400,300 420,320 410,360 C 350,380 250,380 190,360 C 180,320 200,300 220,290 Z" fill="#C5B29B" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    
+    <!-- 胸部左块 -->
+    <path d="M 180,370 C 220,400 250,400 265,370 L 255,460 C 200,450 160,420 160,390 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    <!-- 胸部右块 -->
+    <path d="M 420,370 C 380,400 350,400 335,370 L 345,460 C 400,450 440,420 440,390 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    
+    <!-- 腹部中央符文石块 -->
+    <path d="M 265,370 C 285,380 315,380 335,370 L 345,465 C 315,485 285,485 255,465 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    
+    <!-- 左侧腹肌 -->
+    <path d="M 160,400 C 150,450 180,500 215,530 L 250,475 Z" fill="#C5B29B" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    <!-- 右侧腹肌 -->
+    <path d="M 440,400 C 450,450 420,500 385,530 L 350,475 Z" fill="#C5B29B" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    <!-- 中央下腹 -->
+    <path d="M 250,475 C 280,500 320,500 350,475 L 360,540 C 320,560 280,560 240,540 Z" fill="#C5B29B" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+
+    <!-- ================== 头部 ================== -->
+    <!-- 头顶颅骨 -->
+    <path d="M 230,160 C 230,80 370,80 370,160 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    
+    <!-- 下颌/巨型下巴 -->
+    <path d="M 215,225 C 215,280 250,310 300,310 C 350,310 385,280 385,225 C 360,255 240,255 215,225 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    <!-- 下巴底部的阴影刻线 -->
+    <path d="M 235,280 C 270,300 330,300 365,280" fill="none" stroke="#A7947E" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- 脸颊 (深色内凹) -->
+    <path d="M 220,180 L 220,235 C 260,250 340,250 380,235 L 380,180 Z" fill="#B19E88" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+
+    <!-- 粗壮的眉骨 -->
+    <path d="M 210,185 C 210,150 250,150 285,160 L 315,160 C 350,150 390,150 390,185 L 390,195 C 350,175 250,175 210,195 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    
+    <!-- 巨大的方形鼻子 -->
+    <path d="M 285,165 L 315,165 L 325,230 L 275,230 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    
+    <!-- 石头上的裂纹细节 (左肩、胸口、头顶) -->
+    <path d="M 250,90 Q 260,110 255,130" fill="none" stroke="#3A2D23" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 330,120 Q 350,130 365,115" fill="none" stroke="#3A2D23" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 270,380 L 285,395" fill="none" stroke="#3A2D23" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 120,300 L 90,320 L 70,300" fill="none" stroke="#3A2D23" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <!-- 漩涡状雕刻纹 -->
+    <path d="M 120,380 C 130,370 145,380 140,395 C 130,410 110,400 115,385 C 120,380 125,380 125,385" fill="none" stroke="#3A2D23" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 480,410 C 495,405 505,420 495,435 C 480,445 465,430 470,415 C 475,410 480,415 480,415" fill="none" stroke="#3A2D23" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- ================== 植物与青苔 ================== -->
+    <!-- 头顶左侧树叶 -->
+    <path d="M 235,115 C 220,95 195,95 190,80 C 215,80 235,90 235,115 Z" fill="#A4D855" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M 235,115 C 215,100 215,80 225,60 C 235,80 245,95 235,115 Z" fill="#88C340" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <!-- 头顶右侧青苔 -->
+    <path d="M 310,90 Q 320,70 340,75 Q 360,65 375,85 Q 395,95 380,120 Q 370,135 365,110 Q 330,110 310,90 Z" fill="#7CB342" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <!-- 左肩青苔与藤蔓 -->
+    <path d="M 125,295 Q 115,275 140,265 Q 160,250 180,265 Q 195,260 205,280 Q 220,300 200,310 Q 180,315 170,295 Q 150,305 125,295 Z" fill="#7CB342" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M 155,270 C 145,250 145,230 160,210 C 170,230 175,250 155,270 Z" fill="#A4D855" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M 205,335 Q 215,350 200,370 Q 185,385 175,370 Q 165,340 185,335 Q 195,325 205,335 Z" fill="#7CB342" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <!-- 右肩青苔与缠绕的藤蔓 -->
+    <path d="M 430,265 Q 450,250 470,260 Q 490,250 515,270 Q 530,285 520,310 Q 500,320 480,300 Q 450,310 430,265 Z" fill="#7CB342" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <!-- 缠绕的藤蔓枝条 -->
+    <path d="M 480,280 C 470,260 480,240 500,215 C 500,235 510,250 480,280 Z" fill="#A4D855" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M 520,240 C 530,225 540,220 550,210 C 545,230 535,240 520,240 Z" fill="#88C340" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M 470,300 C 460,340 440,380 430,420 C 425,450 440,490 460,530" fill="none" stroke="#558B2F" stroke-width="6" stroke-linecap="round"/>
+    <!-- 手臂下方苔藓 -->
+    <path d="M 60,550 Q 80,520 100,535 Q 120,530 135,560 Q 130,590 105,585 Q 85,600 60,550 Z" fill="#7CB342" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M 90,545 C 85,520 95,500 115,485 C 110,510 105,525 90,545 Z" fill="#A4D855" stroke="#3A2D23" stroke-width="4" stroke-linejoin="round"/>
+
+  </g>
+
+  <!-- ================== 发光特效层 (眼睛与符文) ================== -->
+  <!-- 左眼 -->
+  <g>
+    <ellipse cx="255" cy="205" rx="16" ry="14" fill="#00E5FF" filter="url(#glow)"/>
+    <ellipse cx="255" cy="205" rx="16" ry="14" fill="#E0FFFF" stroke="#3A2D23" stroke-width="3"/>
+    <!-- 眼睛高光 -->
+    <circle cx="250" cy="200" r="4" fill="#FFFFFF"/>
+  </g>
+  <!-- 右眼 -->
+  <g>
+    <ellipse cx="345" cy="205" rx="16" ry="14" fill="#00E5FF" filter="url(#glow)"/>
+    <ellipse cx="345" cy="205" rx="16" ry="14" fill="#E0FFFF" stroke="#3A2D23" stroke-width="3"/>
+    <!-- 眼睛高光 -->
+    <circle cx="340" cy="200" r="4" fill="#FFFFFF"/>
+  </g>
+
+  <!-- 符文组 -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 中央大 R 符文 -->
+    <!-- 外发光层 -->
+    <g filter="url(#glow)" stroke="#00E5FF" stroke-width="10">
+      <path d="M 285,395 V 455 M 285,395 H 305 A 15 15 0 0 1 305,425 H 285 M 295,425 L 320,455" />
+    </g>
+    <!-- 亮白内芯层 -->
+    <g stroke="#E0FFFF" stroke-width="4">
+      <path d="M 285,395 V 455 M 285,395 H 305 A 15 15 0 0 1 305,425 H 285 M 295,425 L 320,455" />
+    </g>
+    
+    <!-- 左胸符文 (类似倒写的L) -->
+    <g filter="url(#glow)" stroke="#00E5FF" stroke-width="8">
+      <path d="M 190,410 V 440 L 225,445" />
+      <path d="M 235,405 L 245,435" />
+      <path d="M 195,395 L 210,395" />
+    </g>
+    <g stroke="#E0FFFF" stroke-width="3">
+      <path d="M 190,410 V 440 L 225,445" />
+      <path d="M 235,405 L 245,435" />
+      <path d="M 195,395 L 210,395" />
+    </g>
+
+    <!-- 右胸符文 (类似折线和点) -->
+    <g filter="url(#glow)" stroke="#00E5FF" stroke-width="8">
+      <path d="M 405,400 L 415,440 L 380,445" />
+      <path d="M 370,410 V 425" />
+    </g>
+    <g stroke="#E0FFFF" stroke-width="3">
+      <path d="M 405,400 L 415,440 L 380,445" />
+      <path d="M 370,410 V 425" />
+    </g>
+
+    <!-- 右臂边缘符文 (画面最右侧) -->
+    <g filter="url(#glow)" stroke="#00E5FF" stroke-width="8">
+      <path d="M 525,325 L 505,370 L 530,375" />
+      <path d="M 545,325 L 535,340" />
+    </g>
+    <g stroke="#E0FFFF" stroke-width="3">
+      <path d="M 525,325 L 505,370 L 530,375" />
+      <path d="M 545,325 L 535,340" />
+    </g>
+
+    <!-- 左臂边缘符文 (画面最左侧下角) -->
+    <g filter="url(#glow)" stroke="#00E5FF" stroke-width="8">
+      <path d="M 75,595 L 100,540 L 120,595" />
+      <path d="M 85,570 H 110" />
+    </g>
+    <g stroke="#E0FFFF" stroke-width="3">
+      <path d="M 75,595 L 100,540 L 120,595" />
+      <path d="M 85,570 H 110" />
+    </g>
+  </g>
+
+  <!-- ================== 石头画框边框 (仿照原图UI) ================== -->
+  <path d="M 15,15 L 585,15 L 585,585 L 15,585 Z" fill="none" stroke="#9A8C82" stroke-width="30" stroke-linejoin="bevel"/>
+  <!-- 边框内侧暗线 -->
+  <path d="M 30,30 L 570,30 L 570,570 L 30,570 Z" fill="none" stroke="#3A2D23" stroke-width="6"/>
+  <!-- 边框外侧暗线 -->
+  <path d="M 0,0 L 600,0 L 600,600 L 0,600 Z" fill="none" stroke="#3A2D23" stroke-width="6"/>
+  
+  <!-- 边框四角的斜线/切角和装饰符文 -->
+  <path d="M 0,60 L 30,30" fill="none" stroke="#3A2D23" stroke-width="6"/>
+  <path d="M 60,0 L 30,30" fill="none" stroke="#3A2D23" stroke-width="6"/>
+  <path d="M 600,60 L 570,30" fill="none" stroke="#3A2D23" stroke-width="6"/>
+  <path d="M 540,0 L 570,30" fill="none" stroke="#3A2D23" stroke-width="6"/>
+  
+  <!-- 边框上的发光小符文 -->
+  <g filter="url(#glow)" stroke="#00E5FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 15,65 L 15,95 L 25,80 L 25,100" />
+    <path d="M 575,65 L 575,80 L 585,65" />
+  </g>
+  <g stroke="#E0FFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 15,65 L 15,95 L 25,80 L 25,100" />
+    <path d="M 575,65 L 575,80 L 585,65" />
+  </g>
+
+  <!-- 边框下方的名称名牌 "RUNE GOLEM" -->
+  <g transform="translate(150, 560)">
+    <path d="M 20,0 L 280,0 L 290,40 L 10,40 Z" fill="#D3C3AD" stroke="#3A2D23" stroke-width="6" stroke-linejoin="round"/>
+    <text x="150" y="32" font-family="monospace, sans-serif" font-weight="bold" font-size="32" fill="#EAE2D8" stroke="#3A2D23" stroke-width="6" text-anchor="middle" letter-spacing="4">RUNE GOLEM</text>
+    <text x="150" y="32" font-family="monospace, sans-serif" font-weight="bold" font-size="32" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">RUNE GOLEM</text>
+  </g>
+
+</svg>

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>奇幻数学岛 - 口算冲刺PK赛</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- 引入 Tesseract.js v5 用于前端手写数字识别 -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        @keyframes damage {
+            0% { transform: translateX(0); filter: brightness(1); }
+            20% { transform: translateX(-10px); filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0); filter: brightness(1); }
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .anim-damage { animation: damage 0.4s ease-in-out; }
+        .anim-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .anim-float { animation: float 3s ease-in-out infinite; }
+        
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); box-shadow: 0 8px 0 #15803d, 0 0 15px rgba(34, 197, 94, 0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 10px 0 #15803d, 0 0 30px rgba(34, 197, 94, 0.8); }
+        }
+        .anim-pulse-glow { animation: pulse-glow 2s infinite; }
+
+        @keyframes spin-slow {
+            100% { transform: rotate(360deg); }
+        }
+        .anim-spin-slow { animation: spin-slow 20s linear infinite; }
+        
+        .mode-btn.active {
+            background: linear-gradient(to bottom, #f59e0b, #ea580c);
+            color: white;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.2), 0 4px 0 #9a3412;
+            transform: translateY(2px);
+        }
+        .mode-btn.inactive {
+            background: white;
+            color: #d97706;
+            box-shadow: 0 6px 0 #fcd34d;
+        }
+        
+        .island-card {
+            background: #8b5a2b; /* 泥土棕 */
+            border-radius: 24px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 0 #5c3a18;
+            margin-bottom: 15px; 
+            margin-top: 20px;
+        }
+        .island-card .grass-top {
+            background: #84cc16; /* 草地绿 */
+            border-radius: 24px 24px 8px 8px;
+            padding-bottom: 12px;
+            border-bottom: 4px solid #4d7c0f;
+        }
+        .island-card.selected {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 12px 0 #5c3a18, 0 10px 25px rgba(245, 158, 11, 0.6);
+            border: 4px solid #fde047;
+        }
+
+        .audio-mode-active #mathQuestion {
+            filter: blur(8px);
+            opacity: 0.7;
+        }
+
+        #drawingCanvas {
+            touch-action: none; 
+        }
+
+        /* 自定义滚动条以便于主菜单滑动 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center bg-gray-100 font-sans overflow-hidden">
+
+    <!-- 注意：此处改为 overflow-y-auto 解决小屏幕下关卡被遮挡问题 -->
+    <div id="mainMenuScreen" class="absolute inset-0 z-50 flex flex-col items-center bg-gradient-to-b from-sky-200 via-yellow-100 to-orange-100 overflow-y-auto overflow-x-hidden">
+        
+        <div class="absolute top-0 right-0 opacity-90 anim-spin-slow w-40 h-40 -mr-10 -mt-10 pointer-events-none">
+            <svg viewBox="0 0 100 100" class="w-full h-full text-yellow-400 fill-current"><path d="M50 0 L55 35 L90 40 L60 60 L70 95 L50 75 L30 95 L40 60 L10 40 L45 35 Z"/></svg>
+        </div>
+        <div class="absolute top-12 left-8 opacity-80 anim-float text-5xl pointer-events-none" style="animation-delay: 0s;">☁️</div>
+        <div class="absolute top-28 right-24 opacity-60 text-4xl anim-float pointer-events-none" style="animation-delay: 1.5s;">☁️</div>
+
+        <!-- 顶部信息栏 -->
+        <div class="w-full max-w-6xl flex justify-between items-center p-4 md:p-6 z-10 shrink-0">
+            <div class="flex items-center gap-3 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border-4 border-orange-300">
+                <div class="w-12 h-12 bg-blue-100 rounded-full border-2 border-white overflow-hidden shadow-inner flex items-center justify-center text-3xl">👦</div>
+                <div class="font-bold text-orange-800">
+                    <div class="text-sm opacity-80 leading-tight">见习勇士</div>
+                    <div class="leading-tight flex items-center gap-1 font-black text-xl text-yellow-500 drop-shadow-sm">
+                        ⭐ <span id="totalStars">0</span>
+                    </div>
+                </div>
+            </div>
+            <button class="w-14 h-14 bg-white/90 rounded-full shadow-lg text-3xl flex items-center justify-center border-4 border-orange-300 text-orange-400 active:scale-95 transition-transform">⚙️</button>
+        </div>
+
+        <!-- 标题区域 -->
+        <div class="mt-2 mb-6 text-center z-10 anim-float relative flex flex-col items-center shrink-0">
+            <h1 class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-400 to-red-500 drop-shadow-xl tracking-wider" style="-webkit-text-stroke: 3px white; text-shadow: 0px 6px 0px #c2410c;">
+                奇幻数学岛
+            </h1>
+            <div class="bg-orange-500 text-white px-6 py-1.5 rounded-full mt-4 border-4 border-white shadow-md transform -rotate-2">
+                <p class="font-black text-lg tracking-widest drop-shadow-md">⚔️ 打败怪兽，守护和平！</p>
+            </div>
+        </div>
+
+        <!-- 模式选择 -->
+        <div class="flex gap-4 bg-orange-100/80 p-2.5 rounded-3xl shadow-inner mb-6 z-10 border-4 border-orange-200 shrink-0">
+            <button id="btnModeVisual" onclick="setGameMode('visual')" class="mode-btn active px-6 py-3 rounded-2xl font-black text-lg flex items-center gap-2 transition-all">
+                <span class="text-3xl drop-shadow-md">👀</span> 看题口算
+            </button>
+            <button id="btnModeAudio" onclick="setGameMode('audio')" class="mode-btn inactive px-6 py-3 rounded-2xl font-black text-lg flex items-center gap-2 transition-all">
+                <span class="text-3xl drop-shadow-md">👂</span> 听音心算
+            </button>
+        </div>
+
+        <!-- 5个关卡网格 -->
+        <div class="w-full max-w-6xl px-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-10 pt-4 z-10 shrink-0">
+            <!-- 关卡 1 -->
+            <div onclick="selectLevel(1)" id="levelCard1" class="island-card selected w-full flex flex-col items-center cursor-pointer relative">
+                <div class="grass-top w-full flex flex-col items-center pt-6 px-2">
+                    <div class="text-5xl md:text-6xl mb-2 -mt-12 drop-shadow-lg anim-float" style="animation-delay: 0s;">🍎</div>
+                    <h3 class="text-xl font-black text-white drop-shadow-md tracking-wide">乘法入门</h3>
+                    <p class="text-xs text-green-100 font-bold mb-1">1~6 乘法</p>
+                </div>
+                <div class="py-2 flex gap-1 text-sm md:text-base">⭐ ⭐ ⭐</div>
+            </div>
+            
+            <!-- 关卡 2 -->
+            <div onclick="selectLevel(2)" id="levelCard2" class="island-card w-full flex flex-col items-center cursor-pointer relative">
+                <div class="grass-top w-full flex flex-col items-center pt-6 px-2" style="background: #eab308; border-color: #ca8a04;">
+                    <div class="text-5xl md:text-6xl mb-2 -mt-12 drop-shadow-lg anim-float" style="animation-delay: 0.5s;">🍉</div>
+                    <h3 class="text-xl font-black text-white drop-shadow-md tracking-wide">除法入门</h3>
+                    <p class="text-xs text-yellow-100 font-bold mb-1">1~6 除法</p>
+                </div>
+                <div class="py-2 flex gap-1 text-sm md:text-base grayscale opacity-50">⭐ ⭐ ⭐</div>
+            </div>
+
+            <!-- 关卡 3 -->
+            <div onclick="selectLevel(3)" id="levelCard3" class="island-card w-full flex flex-col items-center cursor-pointer relative">
+                <div class="grass-top w-full flex flex-col items-center pt-6 px-2" style="background: #3b82f6; border-color: #2563eb;">
+                    <div class="text-5xl md:text-6xl mb-2 -mt-12 drop-shadow-lg anim-float" style="animation-delay: 1s;">🚀</div>
+                    <h3 class="text-xl font-black text-white drop-shadow-md tracking-wide">乘法进阶</h3>
+                    <p class="text-xs text-blue-100 font-bold mb-1">7~9 乘法</p>
+                </div>
+                <div class="py-2 flex gap-1 text-sm md:text-base grayscale opacity-50">⭐ ⭐ ⭐</div>
+            </div>
+
+            <!-- 关卡 4 -->
+            <div onclick="selectLevel(4)" id="levelCard4" class="island-card w-full flex flex-col items-center cursor-pointer relative">
+                <div class="grass-top w-full flex flex-col items-center pt-6 px-2" style="background: #a855f7; border-color: #9333ea;">
+                    <div class="text-5xl md:text-6xl mb-2 -mt-12 drop-shadow-lg anim-float" style="animation-delay: 1.5s;">🛸</div>
+                    <h3 class="text-xl font-black text-white drop-shadow-md tracking-wide">除法进阶</h3>
+                    <p class="text-xs text-purple-100 font-bold mb-1">7~9 除法</p>
+                </div>
+                <div class="py-2 flex gap-1 text-sm md:text-base grayscale opacity-50">⭐ ⭐ ⭐</div>
+            </div>
+
+            <!-- 关卡 5 -->
+            <div onclick="selectLevel(5)" id="levelCard5" class="island-card w-full flex flex-col items-center cursor-pointer relative col-span-2 md:col-span-1 lg:col-span-1">
+                <div class="grass-top w-full flex flex-col items-center pt-6 px-2" style="background: #ef4444; border-color: #b91c1c;">
+                    <div class="text-5xl md:text-6xl mb-2 -mt-12 drop-shadow-lg anim-float" style="animation-delay: 2s;">👑</div>
+                    <h3 class="text-xl font-black text-white drop-shadow-md tracking-wide">巅峰对决</h3>
+                    <p class="text-xs text-red-100 font-bold mb-1">综合复习</p>
+                </div>
+                <div class="py-2 flex gap-1 text-sm md:text-base grayscale opacity-50">⭐ ⭐ ⭐</div>
+            </div>
+        </div>
+
+        <!-- 开始按钮 -->
+        <button onclick="goToRules()" class="anim-pulse-glow mt-4 mb-16 z-10 bg-gradient-to-b from-green-400 to-green-600 text-white font-black text-4xl py-4 px-24 rounded-full border-4 border-white active:scale-95 transition-transform flex items-center gap-3 shadow-xl shrink-0">
+            <span>▶</span> 出发！
+        </button>
+    </div>
+
+    <div id="startScreen" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center hidden">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl anim-pop border-4 border-orange-400">
+            <h1 class="text-4xl font-black text-orange-500 mb-4 drop-shadow-sm">战斗准备</h1>
+            <ul class="text-left text-lg text-gray-700 font-bold space-y-4 mb-8 bg-orange-50 p-4 rounded-xl border border-orange-200">
+                <li class="flex items-center gap-2"><span>🎯</span> 目标：率先答对 10 道题！</li>
+                <li class="flex items-center gap-2"><span>✏️</span> 操作：在白板上手写数字作答。</li>
+                <li class="flex items-center gap-2"><span>🤖</span> 提示：停笔1秒后，AI会自动识别你的答案！</li>
+            </ul>
+            <div class="flex gap-3">
+                <button onclick="returnToMenu()" class="w-1/3 bg-gray-200 text-gray-600 font-bold text-xl py-4 rounded-full shadow-[0_6px_0_#d1d5db] active:shadow-none active:translate-y-[6px] transition-all">
+                    返回
+                </button>
+                <button id="startBtn" onclick="startGame()" class="w-2/3 bg-gradient-to-r from-orange-400 to-red-500 text-white font-bold text-2xl py-4 rounded-full shadow-[0_6px_0_#c2410c] active:shadow-none active:translate-y-[6px] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    正在加载...
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PC Desktop Optimized Game Container -->
+    <div id="gameContainer" class="w-11/12 max-w-6xl h-[90vh] bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl flex flex-col border-4 border-white relative overflow-hidden hidden mt-4 mb-4">
+        
+        <!-- Top: PK Combat Scene (25% height) -->
+        <div class="h-1/4 min-h-[180px] w-full bg-gradient-to-b from-sky-300 to-sky-100 relative shadow-inner overflow-hidden flex flex-col justify-end border-b-4 border-sky-200">
+            <div class="absolute top-4 left-4 right-4 flex justify-between z-20">
+                <button onclick="returnToMenu()" class="bg-white/90 text-sky-700 px-4 py-2 rounded-full shadow-md font-bold text-sm border-2 border-sky-200 hover:bg-sky-50 transition-colors">
+                    ⬅ 退出战斗
+                </button>
+                <div class="bg-white/90 px-6 py-2 rounded-full shadow-md text-orange-600 font-black border-2 border-orange-200">
+                    目标: 10题
+                </div>
+            </div>
+
+            <!-- Ground -->
+            <div class="w-full h-12 bg-gradient-to-b from-green-400 to-green-600 border-t-4 border-green-700 relative z-10">
+                <div class="absolute -top-3 left-0 w-full h-3 flex overflow-hidden opacity-50">
+                    <div class="w-4 h-4 bg-green-700 rounded-full mx-1"></div>
+                    <div class="w-4 h-4 bg-green-700 rounded-full mx-1"></div>
+                </div>
+            </div>
+
+            <!-- Player Avatar -->
+            <div class="absolute bottom-10 left-0 w-full px-12 z-20 pointer-events-none">
+                <div class="relative w-full h-full">
+                    <div id="playerAvatar" class="absolute bottom-0 left-[0%] transition-all duration-500 transform -translate-x-1/2 flex flex-col items-center">
+                        <div class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full mb-2 shadow-sm whitespace-nowrap">
+                            勇士 <span id="playerProgressText">0</span>/10
+                        </div>
+                        <div class="w-20 h-20 md:w-24 md:h-24 drop-shadow-lg filter hover:brightness-110 transition-all">
+                            <svg viewBox="0 0 100 100" class="w-full h-full"><path fill="#FCD34D" d="M30,50 Q50,20 70,50 Q75,70 50,90 Q25,70 30,50 Z" /><circle cx="50" cy="50" r="15" fill="#FFF" /><circle cx="45" cy="48" r="3" fill="#333" /><circle cx="55" cy="48" r="3" fill="#333" /><rect x="40" y="30" width="20" height="8" fill="#9CA3AF" rx="4" /><path d="M20,60 L10,30 L15,25 Z" fill="#D1D5DB" stroke="#9CA3AF" stroke-width="2" /></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monster Avatar -->
+            <div class="absolute bottom-24 left-0 w-full px-12 z-10 pointer-events-none">
+                <div class="relative w-full h-full">
+                    <div id="monsterAvatar" class="absolute bottom-0 left-[0%] transition-all duration-1000 transform -translate-x-1/2 flex flex-col items-center">
+                        <div class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full mb-2 shadow-sm whitespace-nowrap">
+                            火龙怪 <span id="monsterProgressText">0</span>/10
+                        </div>
+                        <div class="w-16 h-16 md:w-20 md:h-20 drop-shadow-md">
+                            <svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="60" r="35" fill="#EF4444" /><path d="M50,25 Q30,10 20,40 Q50,30 50,25 Z" fill="#EF4444" /><circle cx="40" cy="55" r="8" fill="#FFF" /><circle cx="60" cy="55" r="8" fill="#FFF" /><circle cx="40" cy="55" r="3" fill="#333" /><circle cx="60" cy="55" r="3" fill="#333" /><path d="M45,75 Q50,85 55,75" stroke="#991B1B" stroke-width="3" fill="none" stroke-linecap="round" /></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-12 right-8 text-5xl z-10 drop-shadow-md">🏁</div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 w-full flex flex-col md:flex-row bg-gray-50 overflow-hidden">
+            
+            <!-- Left: Problem Display -->
+            <div class="h-1/3 md:h-full md:w-2/5 flex flex-col items-center justify-center bg-amber-50 border-b-4 md:border-b-0 md:border-r-4 border-amber-100 shadow-inner relative z-10">
+                <div id="questionContainer" class="text-center transition-all duration-300 w-full px-4">
+                    <div id="audioIndicator" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 text-orange-500 bg-orange-100 px-6 py-2 rounded-full text-base font-bold animate-pulse whitespace-nowrap shadow-sm border border-orange-200">
+                        🔊 请听题...
+                    </div>
+                    
+                    <h2 id="mathQuestion" class="text-6xl md:text-7xl lg:text-8xl font-black text-gray-800 tracking-wider transition-all duration-300 py-8 font-mono">
+                        <span id="num1"></span> <span id="operator"></span> <span id="num2"></span> = <br class="hidden md:block lg:hidden" />
+                        <span id="currentAnswer" class="text-blue-500 border-b-4 border-blue-500 px-2 min-w-[80px] inline-block h-[1em] mt-2 md:mt-0"></span>
+                    </h2>
+                    <div id="feedbackMsg" class="absolute bottom-4 left-0 w-full text-center text-xl font-bold opacity-0 transition-opacity"></div>
+                </div>
+                
+                <button id="replayAudioBtn" onclick="replayQuestion()" class="hidden absolute right-6 bottom-6 bg-orange-100 hover:bg-orange-200 text-orange-600 p-4 rounded-full shadow-md border-2 border-orange-300 active:scale-95 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                </button>
+            </div>
+
+            <!-- Right: Whiteboard -->
+            <div class="h-2/3 md:h-full md:w-3/5 w-full relative bg-white">
+                <div class="absolute top-4 left-0 w-full text-center text-gray-400 font-bold text-lg pointer-events-none flex items-center justify-center gap-2 z-10">
+                    <span>✏️</span> 请在此处手写作答，停笔1秒自动识别
+                </div>
+
+                <div id="aiStatus" class="absolute top-4 right-4 bg-gray-100 text-gray-500 px-4 py-1.5 rounded-full text-sm font-bold opacity-0 transition-opacity border-2 border-gray-200 flex items-center gap-2 z-10">
+                    <div class="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                    AI识别中... (怪兽暂停)
+                </div>
+
+                <canvas id="drawingCanvas" class="absolute inset-0 w-full h-full cursor-crosshair touch-none z-0"></canvas>
+                
+                <button id="clearBtn" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-8 py-3 rounded-full font-bold shadow-sm border-2 border-gray-300 active:scale-95 transition-all flex items-center gap-2 text-lg z-10">
+                    <span>🗑️</span> 清空重写
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4 text-center hidden">
+        <div id="resultCard" class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-4 border-transparent transition-all">
+            <div class="text-8xl mb-4 anim-pop" id="resultIcon">🏆</div>
+            <h2 id="resultTitle" class="text-4xl font-black mb-2"></h2>
+            <p id="resultMsg" class="text-gray-600 mb-8 text-lg"></p>
+            <div class="flex gap-3">
+                <button onclick="returnToMenu()" class="w-1/3 bg-gray-200 text-gray-600 font-bold text-xl py-4 rounded-full shadow-[0_6px_0_#d1d5db] active:shadow-none active:translate-y-[6px] transition-all">
+                    回主页
+                </button>
+                <button onclick="resetGame()" class="w-2/3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-2xl py-4 rounded-full shadow-[0_6px_0_#d97706] active:shadow-none active:translate-y-[6px] transition-all">
+                    再玩一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOTAL_QUESTIONS = 10;
+        let playerProgress = 0;
+        let monsterProgress = 0;
+        let currentCorrectAnswer = 0;
+        let isGameRunning = false;
+        let monsterTimer;
+        let startTime = 0;
+        
+        let gameMode = 'visual'; 
+        let currentLevel = 1;
+        let totalStarsWon = 0;
+        let currentQuestionText = "";
+
+        let ocrWorker = null;
+        let isDrawing = false;
+        let recognitionTimeout = null;
+        const ctx = document.getElementById('drawingCanvas').getContext('2d');
+        let canvasHasContent = false;
+        let lastPos = { x: 0, y: 0 };
+        let isRecognizing = false;
+
+        const dom = {
+            mainMenuScreen: document.getElementById('mainMenuScreen'),
+            btnModeVisual: document.getElementById('btnModeVisual'),
+            btnModeAudio: document.getElementById('btnModeAudio'),
+            audioIndicator: document.getElementById('audioIndicator'),
+            replayAudioBtn: document.getElementById('replayAudioBtn'),
+            startScreen: document.getElementById('startScreen'),
+            startBtn: document.getElementById('startBtn'),
+            gameContainer: document.getElementById('gameContainer'),
+            num1: document.getElementById('num1'),
+            num2: document.getElementById('num2'),
+            operator: document.getElementById('operator'),
+            currentAnswer: document.getElementById('currentAnswer'),
+            feedbackMsg: document.getElementById('feedbackMsg'),
+            playerAvatar: document.getElementById('playerAvatar'),
+            monsterAvatar: document.getElementById('monsterAvatar'),
+            playerProgressText: document.getElementById('playerProgressText'),
+            monsterProgressText: document.getElementById('monsterProgressText'),
+            resultModal: document.getElementById('resultModal'),
+            resultCard: document.getElementById('resultCard'),
+            resultIcon: document.getElementById('resultIcon'),
+            resultTitle: document.getElementById('resultTitle'),
+            resultMsg: document.getElementById('resultMsg'),
+            canvas: document.getElementById('drawingCanvas'),
+            clearBtn: document.getElementById('clearBtn'),
+            aiStatus: document.getElementById('aiStatus'),
+            questionContainer: document.getElementById('questionContainer')
+        };
+
+        window.addEventListener('load', async () => {
+            try {
+                // 加载 v5 版本引擎
+                ocrWorker = await Tesseract.createWorker('eng');
+                await ocrWorker.setParameters({
+                    tessedit_char_whitelist: '0123456789',
+                });
+                dom.startBtn.innerText = "进入战场！";
+                dom.startBtn.disabled = false;
+                resizeCanvas();
+            } catch (error) {
+                console.error("OCR init failed:", error);
+                dom.startBtn.innerText = "加载失败，请刷新";
+            }
+        });
+
+        function setGameMode(mode) {
+            gameMode = mode;
+            if (mode === 'visual') {
+                dom.btnModeVisual.className = "mode-btn active px-6 py-3 rounded-2xl font-black text-lg flex items-center gap-2 transition-all";
+                dom.btnModeAudio.className = "mode-btn inactive px-6 py-3 rounded-2xl font-black text-lg flex items-center gap-2 transition-all";
+            } else {
+                dom.btnModeAudio.className = "mode-btn active px-6 py-3 rounded-2xl font-black text-lg flex items-center gap-2 transition-all";
+                dom.btnModeVisual.className = "mode-btn inactive px-6 py-3 rounded-2xl font-black text-lg flex items-center gap-2 transition-all";
+            }
+        }
+
+        function selectLevel(levelId) {
+            currentLevel = levelId;
+            document.querySelectorAll('.island-card').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`levelCard${levelId}`).classList.add('selected');
+        }
+
+        function goToRules() {
+            dom.mainMenuScreen.classList.add('hidden');
+            dom.startScreen.classList.remove('hidden');
+        }
+
+        function returnToMenu() {
+            isGameRunning = false;
+            clearInterval(monsterTimer);
+            window.speechSynthesis.cancel();
+            
+            dom.gameContainer.classList.add('hidden');
+            dom.resultModal.classList.add('hidden');
+            dom.startScreen.classList.add('hidden');
+            dom.mainMenuScreen.classList.remove('hidden');
+        }
+
+        function resizeCanvas() {
+            const rect = dom.canvas.parentElement.getBoundingClientRect();
+            dom.canvas.width = rect.width;
+            dom.canvas.height = rect.height;
+            clearCanvas(false);
+        }
+
+        window.addEventListener('resize', () => {
+            if(!dom.gameContainer.classList.contains('hidden')) {
+                resizeCanvas();
+            }
+        });
+
+        function getMousePos(e) {
+            const rect = dom.canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDrawing(e) {
+            if(isRecognizing) return;
+            e.preventDefault();
+            isDrawing = true;
+            lastPos = getMousePos(e);
+            if (recognitionTimeout) clearTimeout(recognitionTimeout);
+        }
+
+        function draw(e) {
+            if (!isDrawing || isRecognizing) return;
+            e.preventDefault();
+            const currentPos = getMousePos(e);
+            
+            ctx.beginPath();
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#3b82f6';
+            ctx.moveTo(lastPos.x, lastPos.y);
+            ctx.lineTo(currentPos.x, currentPos.y);
+            ctx.stroke();
+            
+            lastPos = currentPos;
+            canvasHasContent = true;
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing || isRecognizing) return;
+            e.preventDefault();
+            isDrawing = false;
+            
+            if (canvasHasContent) {
+                if (recognitionTimeout) clearTimeout(recognitionTimeout);
+                recognitionTimeout = setTimeout(recognizeHandwriting, 1000);
+            }
+        }
+
+        dom.canvas.addEventListener('mousedown', startDrawing);
+        dom.canvas.addEventListener('mousemove', draw);
+        dom.canvas.addEventListener('mouseup', stopDrawing);
+        dom.canvas.addEventListener('mouseout', stopDrawing);
+        
+        dom.canvas.addEventListener('touchstart', startDrawing, {passive: false});
+        dom.canvas.addEventListener('touchmove', draw, {passive: false});
+        dom.canvas.addEventListener('touchend', stopDrawing, {passive: false});
+
+        function clearCanvas(manualClear = true) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, dom.canvas.width, dom.canvas.height);
+            canvasHasContent = false;
+            if (recognitionTimeout) clearTimeout(recognitionTimeout);
+            
+            if (manualClear) {
+                dom.currentAnswer.innerText = "";
+            }
+        }
+
+        dom.clearBtn.addEventListener('click', clearCanvas);
+
+        async function recognizeHandwriting() {
+            if (!canvasHasContent || !ocrWorker || isRecognizing) return;
+            
+            isRecognizing = true;
+            dom.aiStatus.classList.remove('opacity-0');
+            dom.canvas.style.opacity = '0.5';
+            
+            try {
+                const dataUrl = dom.canvas.toDataURL('image/jpeg');
+                const { data: { text } } = await ocrWorker.recognize(dataUrl);
+                
+                const recognizedNumber = text.replace(/[^0-9]/g, '');
+                
+                if (recognizedNumber) {
+                    dom.currentAnswer.innerText = recognizedNumber;
+                    checkAnswer(parseInt(recognizedNumber));
+                } else {
+                    showFeedback(false, "没认出来哦，重写一下吧~");
+                    clearCanvas();
+                }
+            } catch (error) {
+                console.error("Recognition error:", error);
+            } finally {
+                isRecognizing = false;
+                dom.aiStatus.classList.add('opacity-0');
+                dom.canvas.style.opacity = '1';
+            }
+        }
+
+        function startGame() {
+            dom.startScreen.classList.add('hidden');
+            dom.gameContainer.classList.remove('hidden');
+            resizeCanvas();
+            resetGame();
+        }
+
+        function resetGame() {
+            playerProgress = 0;
+            monsterProgress = 0;
+            isGameRunning = true;
+            startTime = Date.now();
+            clearCanvas();
+            
+            dom.resultModal.classList.add('hidden');
+            updateAvatars();
+            generateQuestion();
+            
+            clearInterval(monsterTimer);
+            monsterTimer = setInterval(monsterTick, 3000);
+        }
+
+        function generateQuestion() {
+            let a, b, op;
+            let qType = currentLevel;
+
+            if (currentLevel === 5) {
+                qType = Math.floor(Math.random() * 4) + 1;
+            }
+            
+            if (qType === 1) {
+                a = Math.floor(Math.random() * 6) + 1; 
+                b = Math.floor(Math.random() * 9) + 1; 
+                op = '×';
+                currentCorrectAnswer = a * b;
+            } else if (qType === 2) {
+                const divisor = Math.floor(Math.random() * 6) + 1; 
+                const quotient = Math.floor(Math.random() * 9) + 1; 
+                a = divisor * quotient;
+                b = divisor;
+                op = '÷';
+                currentCorrectAnswer = quotient;
+            } else if (qType === 3) {
+                a = Math.floor(Math.random() * 3) + 7; 
+                b = Math.floor(Math.random() * 9) + 1; 
+                op = '×';
+                currentCorrectAnswer = a * b;
+            } else if (qType === 4) {
+                const divisor = Math.floor(Math.random() * 3) + 7; 
+                const quotient = Math.floor(Math.random() * 9) + 1; 
+                a = divisor * quotient;
+                b = divisor;
+                op = '÷';
+                currentCorrectAnswer = quotient;
+            }
+
+            if (op === '×' && Math.random() > 0.5) {
+                let temp = a; a = b; b = temp;
+            }
+
+            dom.num1.innerText = a;
+            dom.num2.innerText = b;
+            dom.operator.innerText = op;
+            dom.currentAnswer.innerText = "";
+            
+            if (gameMode === 'audio') {
+                dom.questionContainer.classList.add('audio-mode-active');
+                dom.audioIndicator.classList.remove('hidden');
+                dom.replayAudioBtn.classList.remove('hidden');
+                
+                const opText = op === '×' ? '乘以' : '除以';
+                currentQuestionText = `${a} ${opText} ${b} 等于几？`;
+                speakText(currentQuestionText);
+            } else {
+                dom.questionContainer.classList.remove('audio-mode-active');
+                dom.audioIndicator.classList.add('hidden');
+                dom.replayAudioBtn.classList.add('hidden');
+            }
+        }
+
+        function speakText(text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function replayQuestion() {
+            if (gameMode === 'audio' && currentQuestionText) {
+                speakText(currentQuestionText);
+            }
+        }
+
+        function monsterTick() {
+            if (!isGameRunning || isRecognizing) return; 
+            
+            monsterProgress++;
+            updateAvatars();
+            
+            if (monsterProgress >= TOTAL_QUESTIONS) {
+                endGame('lose');
+            }
+        }
+
+        function checkAnswer(userAnswer) {
+            if (!isGameRunning) return;
+
+            if (userAnswer === currentCorrectAnswer) {
+                showFeedback(true);
+                playerProgress++;
+                updateAvatars();
+                clearCanvas();
+                
+                dom.playerAvatar.classList.add('anim-pop');
+                dom.monsterAvatar.classList.add('anim-damage');
+                setTimeout(() => {
+                    dom.playerAvatar.classList.remove('anim-pop');
+                    dom.monsterAvatar.classList.remove('anim-damage');
+                }, 500);
+
+                if (playerProgress >= TOTAL_QUESTIONS) {
+                    endGame('win');
+                } else {
+                    setTimeout(generateQuestion, 500);
+                }
+            } else {
+                showFeedback(false, "答错啦，再试一次！");
+                clearCanvas();
+            }
+        }
+
+        function showFeedback(isCorrect, customMsg = "") {
+            dom.feedbackMsg.innerText = isCorrect ? "✔ 答对了！" : "✘ " + customMsg;
+            dom.feedbackMsg.className = `absolute bottom-4 left-0 w-full text-center text-3xl font-black ${isCorrect ? 'text-green-500' : 'text-red-500'} transition-opacity`;
+            
+            setTimeout(() => { dom.feedbackMsg.style.opacity = '1'; }, 10);
+            setTimeout(() => { dom.feedbackMsg.style.opacity = '0'; }, 1000);
+        }
+
+        function updateAvatars() {
+            const pPct = (playerProgress / TOTAL_QUESTIONS) * 100;
+            const mPct = (monsterProgress / TOTAL_QUESTIONS) * 100;
+            
+            dom.playerAvatar.style.left = `${pPct}%`;
+            dom.monsterAvatar.style.left = `${mPct}%`;
+            
+            dom.playerProgressText.innerText = playerProgress;
+            dom.monsterProgressText.innerText = monsterProgress;
+        }
+
+        function endGame(result) {
+            isGameRunning = false;
+            clearInterval(monsterTimer);
+            window.speechSynthesis.cancel();
+            
+            const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+            
+            dom.resultModal.classList.remove('hidden');
+            dom.resultCard.className = "bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border-4 transition-all anim-pop";
+            
+            if (result === 'win') {
+                dom.resultCard.classList.add('border-yellow-400');
+                dom.resultIcon.innerText = "🏆";
+                dom.resultTitle.innerText = "胜利啦！";
+                dom.resultTitle.className = "text-4xl font-black mb-2 text-yellow-500";
+                dom.resultMsg.innerText = `太棒了！你用 ${timeSpent} 秒击败了怪兽！你是真正的勇士！`;
+                
+                totalStarsWon += 1;
+                document.getElementById('totalStars').innerText = totalStarsWon;
+                
+                fireConfetti();
+            } else {
+                dom.resultCard.classList.add('border-slate-300');
+                dom.resultIcon.innerText = "💨";
+                dom.resultTitle.innerText = "哎呀！";
+                dom.resultTitle.className = "text-4xl font-black mb-2 text-slate-600";
+                dom.resultMsg.innerText = "怪兽跑得太快了，差一点点就追上了。擦干汗水，再挑战一次吧！";
+            }
+        }
+
+        function fireConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+    </script>
+</body>
+</html>
